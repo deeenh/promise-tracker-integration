@@ -17,7 +17,14 @@ import {
 
 import { cn } from "@/lib/utils";
 
-export const PT_NAV = [
+type PTNavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+};
+
+export const PT_NAV: PTNavItem[] = [
   { to: "/promise-tracker", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/promise-tracker/all", label: "All Promises", icon: ListChecks },
   { to: "/promise-tracker/create", label: "Create Promise", icon: PlusCircle },
@@ -31,7 +38,7 @@ export const PT_NAV = [
   { to: "/promise-tracker/insights", label: "AI Insights", icon: Sparkles },
   { to: "/promise-tracker/audit-logs", label: "Audit Logs", icon: ScrollText },
   { to: "/promise-tracker/settings", label: "Settings", icon: Settings2 },
-] as const;
+];
 
 export function PTSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
