@@ -14,11 +14,16 @@ import { Route as PromiseTrackerRouteImport } from './routes/promise-tracker'
 import { Route as PromiseTrackerIndexRouteImport } from './routes/promise-tracker.index'
 import { Route as PromiseTrackerActiveRouteImport } from './routes/promise-tracker.active'
 import { Route as PromiseTrackerAllRouteImport } from './routes/promise-tracker.all'
+import { Route as PromiseTrackerAuditLogsRouteImport } from './routes/promise-tracker.audit-logs'
 import { Route as PromiseTrackerBrokenRouteImport } from './routes/promise-tracker.broken'
 import { Route as PromiseTrackerCategoriesRouteImport } from './routes/promise-tracker.categories'
 import { Route as PromiseTrackerCreateRouteImport } from './routes/promise-tracker.create'
 import { Route as PromiseTrackerDelayedRouteImport } from './routes/promise-tracker.delayed'
+import { Route as PromiseTrackerEscalationsRouteImport } from './routes/promise-tracker.escalations'
 import { Route as PromiseTrackerFulfilledRouteImport } from './routes/promise-tracker.fulfilled'
+import { Route as PromiseTrackerInsightsRouteImport } from './routes/promise-tracker.insights'
+import { Route as PromiseTrackerRulesRouteImport } from './routes/promise-tracker.rules'
+import { Route as PromiseTrackerSettingsRouteImport } from './routes/promise-tracker.settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,6 +50,11 @@ const PromiseTrackerAllRoute = PromiseTrackerAllRouteImport.update({
   path: '/all',
   getParentRoute: () => PromiseTrackerRoute,
 } as any)
+const PromiseTrackerAuditLogsRoute = PromiseTrackerAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
 const PromiseTrackerBrokenRoute = PromiseTrackerBrokenRouteImport.update({
   id: '/broken',
   path: '/broken',
@@ -66,9 +76,30 @@ const PromiseTrackerDelayedRoute = PromiseTrackerDelayedRouteImport.update({
   path: '/delayed',
   getParentRoute: () => PromiseTrackerRoute,
 } as any)
+const PromiseTrackerEscalationsRoute =
+  PromiseTrackerEscalationsRouteImport.update({
+    id: '/escalations',
+    path: '/escalations',
+    getParentRoute: () => PromiseTrackerRoute,
+  } as any)
 const PromiseTrackerFulfilledRoute = PromiseTrackerFulfilledRouteImport.update({
   id: '/fulfilled',
   path: '/fulfilled',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
+const PromiseTrackerInsightsRoute = PromiseTrackerInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
+const PromiseTrackerRulesRoute = PromiseTrackerRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
+const PromiseTrackerSettingsRoute = PromiseTrackerSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => PromiseTrackerRoute,
 } as any)
 
@@ -77,22 +108,32 @@ export interface FileRoutesByFullPath {
   '/promise-tracker': typeof PromiseTrackerRouteWithChildren
   '/promise-tracker/active': typeof PromiseTrackerActiveRoute
   '/promise-tracker/all': typeof PromiseTrackerAllRoute
+  '/promise-tracker/audit-logs': typeof PromiseTrackerAuditLogsRoute
   '/promise-tracker/broken': typeof PromiseTrackerBrokenRoute
   '/promise-tracker/categories': typeof PromiseTrackerCategoriesRoute
   '/promise-tracker/create': typeof PromiseTrackerCreateRoute
   '/promise-tracker/delayed': typeof PromiseTrackerDelayedRoute
+  '/promise-tracker/escalations': typeof PromiseTrackerEscalationsRoute
   '/promise-tracker/fulfilled': typeof PromiseTrackerFulfilledRoute
+  '/promise-tracker/insights': typeof PromiseTrackerInsightsRoute
+  '/promise-tracker/rules': typeof PromiseTrackerRulesRoute
+  '/promise-tracker/settings': typeof PromiseTrackerSettingsRoute
   '/promise-tracker/': typeof PromiseTrackerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/promise-tracker/active': typeof PromiseTrackerActiveRoute
   '/promise-tracker/all': typeof PromiseTrackerAllRoute
+  '/promise-tracker/audit-logs': typeof PromiseTrackerAuditLogsRoute
   '/promise-tracker/broken': typeof PromiseTrackerBrokenRoute
   '/promise-tracker/categories': typeof PromiseTrackerCategoriesRoute
   '/promise-tracker/create': typeof PromiseTrackerCreateRoute
   '/promise-tracker/delayed': typeof PromiseTrackerDelayedRoute
+  '/promise-tracker/escalations': typeof PromiseTrackerEscalationsRoute
   '/promise-tracker/fulfilled': typeof PromiseTrackerFulfilledRoute
+  '/promise-tracker/insights': typeof PromiseTrackerInsightsRoute
+  '/promise-tracker/rules': typeof PromiseTrackerRulesRoute
+  '/promise-tracker/settings': typeof PromiseTrackerSettingsRoute
   '/promise-tracker': typeof PromiseTrackerIndexRoute
 }
 export interface FileRoutesById {
@@ -101,11 +142,16 @@ export interface FileRoutesById {
   '/promise-tracker': typeof PromiseTrackerRouteWithChildren
   '/promise-tracker/active': typeof PromiseTrackerActiveRoute
   '/promise-tracker/all': typeof PromiseTrackerAllRoute
+  '/promise-tracker/audit-logs': typeof PromiseTrackerAuditLogsRoute
   '/promise-tracker/broken': typeof PromiseTrackerBrokenRoute
   '/promise-tracker/categories': typeof PromiseTrackerCategoriesRoute
   '/promise-tracker/create': typeof PromiseTrackerCreateRoute
   '/promise-tracker/delayed': typeof PromiseTrackerDelayedRoute
+  '/promise-tracker/escalations': typeof PromiseTrackerEscalationsRoute
   '/promise-tracker/fulfilled': typeof PromiseTrackerFulfilledRoute
+  '/promise-tracker/insights': typeof PromiseTrackerInsightsRoute
+  '/promise-tracker/rules': typeof PromiseTrackerRulesRoute
+  '/promise-tracker/settings': typeof PromiseTrackerSettingsRoute
   '/promise-tracker/': typeof PromiseTrackerIndexRoute
 }
 export interface FileRouteTypes {
@@ -115,22 +161,32 @@ export interface FileRouteTypes {
     | '/promise-tracker'
     | '/promise-tracker/active'
     | '/promise-tracker/all'
+    | '/promise-tracker/audit-logs'
     | '/promise-tracker/broken'
     | '/promise-tracker/categories'
     | '/promise-tracker/create'
     | '/promise-tracker/delayed'
+    | '/promise-tracker/escalations'
     | '/promise-tracker/fulfilled'
+    | '/promise-tracker/insights'
+    | '/promise-tracker/rules'
+    | '/promise-tracker/settings'
     | '/promise-tracker/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/promise-tracker/active'
     | '/promise-tracker/all'
+    | '/promise-tracker/audit-logs'
     | '/promise-tracker/broken'
     | '/promise-tracker/categories'
     | '/promise-tracker/create'
     | '/promise-tracker/delayed'
+    | '/promise-tracker/escalations'
     | '/promise-tracker/fulfilled'
+    | '/promise-tracker/insights'
+    | '/promise-tracker/rules'
+    | '/promise-tracker/settings'
     | '/promise-tracker'
   id:
     | '__root__'
@@ -138,11 +194,16 @@ export interface FileRouteTypes {
     | '/promise-tracker'
     | '/promise-tracker/active'
     | '/promise-tracker/all'
+    | '/promise-tracker/audit-logs'
     | '/promise-tracker/broken'
     | '/promise-tracker/categories'
     | '/promise-tracker/create'
     | '/promise-tracker/delayed'
+    | '/promise-tracker/escalations'
     | '/promise-tracker/fulfilled'
+    | '/promise-tracker/insights'
+    | '/promise-tracker/rules'
+    | '/promise-tracker/settings'
     | '/promise-tracker/'
   fileRoutesById: FileRoutesById
 }
@@ -188,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PromiseTrackerAllRouteImport
       parentRoute: typeof PromiseTrackerRoute
     }
+    '/promise-tracker/audit-logs': {
+      id: '/promise-tracker/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/promise-tracker/audit-logs'
+      preLoaderRoute: typeof PromiseTrackerAuditLogsRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
     '/promise-tracker/broken': {
       id: '/promise-tracker/broken'
       path: '/broken'
@@ -216,11 +284,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PromiseTrackerDelayedRouteImport
       parentRoute: typeof PromiseTrackerRoute
     }
+    '/promise-tracker/escalations': {
+      id: '/promise-tracker/escalations'
+      path: '/escalations'
+      fullPath: '/promise-tracker/escalations'
+      preLoaderRoute: typeof PromiseTrackerEscalationsRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
     '/promise-tracker/fulfilled': {
       id: '/promise-tracker/fulfilled'
       path: '/fulfilled'
       fullPath: '/promise-tracker/fulfilled'
       preLoaderRoute: typeof PromiseTrackerFulfilledRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
+    '/promise-tracker/insights': {
+      id: '/promise-tracker/insights'
+      path: '/insights'
+      fullPath: '/promise-tracker/insights'
+      preLoaderRoute: typeof PromiseTrackerInsightsRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
+    '/promise-tracker/rules': {
+      id: '/promise-tracker/rules'
+      path: '/rules'
+      fullPath: '/promise-tracker/rules'
+      preLoaderRoute: typeof PromiseTrackerRulesRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
+    '/promise-tracker/settings': {
+      id: '/promise-tracker/settings'
+      path: '/settings'
+      fullPath: '/promise-tracker/settings'
+      preLoaderRoute: typeof PromiseTrackerSettingsRouteImport
       parentRoute: typeof PromiseTrackerRoute
     }
   }
@@ -229,22 +325,32 @@ declare module '@tanstack/react-router' {
 interface PromiseTrackerRouteChildren {
   PromiseTrackerActiveRoute: typeof PromiseTrackerActiveRoute
   PromiseTrackerAllRoute: typeof PromiseTrackerAllRoute
+  PromiseTrackerAuditLogsRoute: typeof PromiseTrackerAuditLogsRoute
   PromiseTrackerBrokenRoute: typeof PromiseTrackerBrokenRoute
   PromiseTrackerCategoriesRoute: typeof PromiseTrackerCategoriesRoute
   PromiseTrackerCreateRoute: typeof PromiseTrackerCreateRoute
   PromiseTrackerDelayedRoute: typeof PromiseTrackerDelayedRoute
+  PromiseTrackerEscalationsRoute: typeof PromiseTrackerEscalationsRoute
   PromiseTrackerFulfilledRoute: typeof PromiseTrackerFulfilledRoute
+  PromiseTrackerInsightsRoute: typeof PromiseTrackerInsightsRoute
+  PromiseTrackerRulesRoute: typeof PromiseTrackerRulesRoute
+  PromiseTrackerSettingsRoute: typeof PromiseTrackerSettingsRoute
   PromiseTrackerIndexRoute: typeof PromiseTrackerIndexRoute
 }
 
 const PromiseTrackerRouteChildren: PromiseTrackerRouteChildren = {
   PromiseTrackerActiveRoute: PromiseTrackerActiveRoute,
   PromiseTrackerAllRoute: PromiseTrackerAllRoute,
+  PromiseTrackerAuditLogsRoute: PromiseTrackerAuditLogsRoute,
   PromiseTrackerBrokenRoute: PromiseTrackerBrokenRoute,
   PromiseTrackerCategoriesRoute: PromiseTrackerCategoriesRoute,
   PromiseTrackerCreateRoute: PromiseTrackerCreateRoute,
   PromiseTrackerDelayedRoute: PromiseTrackerDelayedRoute,
+  PromiseTrackerEscalationsRoute: PromiseTrackerEscalationsRoute,
   PromiseTrackerFulfilledRoute: PromiseTrackerFulfilledRoute,
+  PromiseTrackerInsightsRoute: PromiseTrackerInsightsRoute,
+  PromiseTrackerRulesRoute: PromiseTrackerRulesRoute,
+  PromiseTrackerSettingsRoute: PromiseTrackerSettingsRoute,
   PromiseTrackerIndexRoute: PromiseTrackerIndexRoute,
 }
 
