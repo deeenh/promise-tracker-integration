@@ -54,13 +54,13 @@ function PTInsights() {
                 {Number(insight.delay_risk)}% risk
               </PTBadge>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">{insight.summary}</p>
+            <p className="mt-3 text-sm text-muted-foreground">{insight.escalation_advice}</p>
             <p className="mt-3 rounded-lg border border-border bg-muted/40 p-3 text-sm">
               <span className="font-medium">Recommended: </span>
-              {insight.recommendation}
+              {insight.suggested_action}
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              Confidence {Number(insight.confidence)}% · Signal {insight.signal}
+              Miss probability {Number(insight.miss_probability)}%
             </p>
           </div>
         ))}
