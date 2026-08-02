@@ -1,0 +1,124 @@
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+
+import { PTPageHeader } from "@/components/promise-tracker/PTPrimitives";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useAuditLogs, useLogAction } from "@/hooks/usePromiseTracker";
+import { downloadCsv, formatDateTime } from "@/lib/promise-tracker/constants";
+
+export const Route = createFileRoute("/promise-tracker/audit-logs")({
+  head: () => ({
+    meta: [
+      { title: "Audit Logs — Promise Tracker" },
+      {
+        name: "description",
+        content:
+          "Immutable trail of every promise action in Software Vala: creations, status changes, escalations, fines, tips and settings updates.",
+      },
+      { property: "og:title", content: "Audit Logs — Promise Tracker" },
+      {
+        property: "og:description",
+        content: "Immutable trail of every action taken in the promise register.",
+      },
+    ],
+  }),
+  component: PTAuditLogs,
+});
+
+function PTAuditLogs() {
+  const { data = [] } = useAuditLogs();
+  const logAction = useLogAction();
+  const [search, setSearch] = useState("");
+
+  const rows = data.filter((log) =>
+    [log.action, log.promise_code, log.actor, log.details]
+      .join(" ")
+      .toLowerCase()
+      .includes(search.trim().toLowerCase()),
+  );
+
+  return (
+    <div>
+      <PTPageHeader
+        title="Audit Logs"
+        description="Every action taken inside the Promise Tracker is recorded with actor, role and timestamp."
+        actions={
+          <Button
+            variant="outline"
+            disabled={rows.length === 0}
+            onClick={() => {
+              downloadCsv(
+                `promise-audit-logs-${new Date().toISOString().slice(0, 10)}.csv`,
+                rows.map((log) => ({
+                  timestamp: log.created_at,
+                  action: log.action,
+                  promise_code: log.promise_code ?? "",
+                  actor: log.actor,
+                  actor_role: log.actor_role,
+                  details: log.details,
+                })),
+              );
+              logAction.mutate({
+                action: "Data Exported",
+                details: `${rows.length} audit log entries exported to CSV`,
+              });
+            }}
+          >
+            Export CSV
+          </Button>
+        }
+      />
+
+      <Input
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        placeholder="Search action, promise code, actor or details"
+        className="mb-4 max-w-md"
+      />
+
+      <div className="glass-panel overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Promise</TableHead>
+              <TableHead>Actor</TableHead>
+              <TableHead>Details</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((log) => (
+              <TableRow key={log.id}>
+                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                  {formatDateTime(log.created_at)}
+                </TableCell>
+                <TableCell className="text-sm font-medium">{log.action}</TableCell>
+                <TableCell className="mono text-xs text-muted-foreground">
+                  {log.promise_code ?? "—"}
+                </TableCell>
+                <TableCell className="text-sm">
+                  <p>{log.actor}</p>
+                  <p className="text-xs text-muted-foreground">{log.actor_role}</p>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">{log.details}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {rows.length === 0 ? (
+          <p className="p-6 text-sm text-muted-foreground">No log entries match this search.</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
