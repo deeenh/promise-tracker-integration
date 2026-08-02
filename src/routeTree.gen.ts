@@ -12,7 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PromiseTrackerRouteImport } from './routes/promise-tracker'
 import { Route as PromiseTrackerIndexRouteImport } from './routes/promise-tracker.index'
+import { Route as PromiseTrackerActiveRouteImport } from './routes/promise-tracker.active'
 import { Route as PromiseTrackerAllRouteImport } from './routes/promise-tracker.all'
+import { Route as PromiseTrackerBrokenRouteImport } from './routes/promise-tracker.broken'
+import { Route as PromiseTrackerDelayedRouteImport } from './routes/promise-tracker.delayed'
+import { Route as PromiseTrackerFulfilledRouteImport } from './routes/promise-tracker.fulfilled'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,41 +33,91 @@ const PromiseTrackerIndexRoute = PromiseTrackerIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PromiseTrackerRoute,
 } as any)
+const PromiseTrackerActiveRoute = PromiseTrackerActiveRouteImport.update({
+  id: '/active',
+  path: '/active',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
 const PromiseTrackerAllRoute = PromiseTrackerAllRouteImport.update({
   id: '/all',
   path: '/all',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
+const PromiseTrackerBrokenRoute = PromiseTrackerBrokenRouteImport.update({
+  id: '/broken',
+  path: '/broken',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
+const PromiseTrackerDelayedRoute = PromiseTrackerDelayedRouteImport.update({
+  id: '/delayed',
+  path: '/delayed',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
+const PromiseTrackerFulfilledRoute = PromiseTrackerFulfilledRouteImport.update({
+  id: '/fulfilled',
+  path: '/fulfilled',
   getParentRoute: () => PromiseTrackerRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/promise-tracker': typeof PromiseTrackerRouteWithChildren
+  '/promise-tracker/active': typeof PromiseTrackerActiveRoute
   '/promise-tracker/all': typeof PromiseTrackerAllRoute
+  '/promise-tracker/broken': typeof PromiseTrackerBrokenRoute
+  '/promise-tracker/delayed': typeof PromiseTrackerDelayedRoute
+  '/promise-tracker/fulfilled': typeof PromiseTrackerFulfilledRoute
   '/promise-tracker/': typeof PromiseTrackerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/promise-tracker/active': typeof PromiseTrackerActiveRoute
   '/promise-tracker/all': typeof PromiseTrackerAllRoute
+  '/promise-tracker/broken': typeof PromiseTrackerBrokenRoute
+  '/promise-tracker/delayed': typeof PromiseTrackerDelayedRoute
+  '/promise-tracker/fulfilled': typeof PromiseTrackerFulfilledRoute
   '/promise-tracker': typeof PromiseTrackerIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/promise-tracker': typeof PromiseTrackerRouteWithChildren
+  '/promise-tracker/active': typeof PromiseTrackerActiveRoute
   '/promise-tracker/all': typeof PromiseTrackerAllRoute
+  '/promise-tracker/broken': typeof PromiseTrackerBrokenRoute
+  '/promise-tracker/delayed': typeof PromiseTrackerDelayedRoute
+  '/promise-tracker/fulfilled': typeof PromiseTrackerFulfilledRoute
   '/promise-tracker/': typeof PromiseTrackerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/promise-tracker' | '/promise-tracker/all' | '/promise-tracker/'
+    | '/'
+    | '/promise-tracker'
+    | '/promise-tracker/active'
+    | '/promise-tracker/all'
+    | '/promise-tracker/broken'
+    | '/promise-tracker/delayed'
+    | '/promise-tracker/fulfilled'
+    | '/promise-tracker/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/promise-tracker/all' | '/promise-tracker'
+  to:
+    | '/'
+    | '/promise-tracker/active'
+    | '/promise-tracker/all'
+    | '/promise-tracker/broken'
+    | '/promise-tracker/delayed'
+    | '/promise-tracker/fulfilled'
+    | '/promise-tracker'
   id:
     | '__root__'
     | '/'
     | '/promise-tracker'
+    | '/promise-tracker/active'
     | '/promise-tracker/all'
+    | '/promise-tracker/broken'
+    | '/promise-tracker/delayed'
+    | '/promise-tracker/fulfilled'
     | '/promise-tracker/'
   fileRoutesById: FileRoutesById
 }
@@ -95,6 +149,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PromiseTrackerIndexRouteImport
       parentRoute: typeof PromiseTrackerRoute
     }
+    '/promise-tracker/active': {
+      id: '/promise-tracker/active'
+      path: '/active'
+      fullPath: '/promise-tracker/active'
+      preLoaderRoute: typeof PromiseTrackerActiveRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
     '/promise-tracker/all': {
       id: '/promise-tracker/all'
       path: '/all'
@@ -102,16 +163,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PromiseTrackerAllRouteImport
       parentRoute: typeof PromiseTrackerRoute
     }
+    '/promise-tracker/broken': {
+      id: '/promise-tracker/broken'
+      path: '/broken'
+      fullPath: '/promise-tracker/broken'
+      preLoaderRoute: typeof PromiseTrackerBrokenRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
+    '/promise-tracker/delayed': {
+      id: '/promise-tracker/delayed'
+      path: '/delayed'
+      fullPath: '/promise-tracker/delayed'
+      preLoaderRoute: typeof PromiseTrackerDelayedRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
+    '/promise-tracker/fulfilled': {
+      id: '/promise-tracker/fulfilled'
+      path: '/fulfilled'
+      fullPath: '/promise-tracker/fulfilled'
+      preLoaderRoute: typeof PromiseTrackerFulfilledRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
   }
 }
 
 interface PromiseTrackerRouteChildren {
+  PromiseTrackerActiveRoute: typeof PromiseTrackerActiveRoute
   PromiseTrackerAllRoute: typeof PromiseTrackerAllRoute
+  PromiseTrackerBrokenRoute: typeof PromiseTrackerBrokenRoute
+  PromiseTrackerDelayedRoute: typeof PromiseTrackerDelayedRoute
+  PromiseTrackerFulfilledRoute: typeof PromiseTrackerFulfilledRoute
   PromiseTrackerIndexRoute: typeof PromiseTrackerIndexRoute
 }
 
 const PromiseTrackerRouteChildren: PromiseTrackerRouteChildren = {
+  PromiseTrackerActiveRoute: PromiseTrackerActiveRoute,
   PromiseTrackerAllRoute: PromiseTrackerAllRoute,
+  PromiseTrackerBrokenRoute: PromiseTrackerBrokenRoute,
+  PromiseTrackerDelayedRoute: PromiseTrackerDelayedRoute,
+  PromiseTrackerFulfilledRoute: PromiseTrackerFulfilledRoute,
   PromiseTrackerIndexRoute: PromiseTrackerIndexRoute,
 }
 
