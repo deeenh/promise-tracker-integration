@@ -25,7 +25,7 @@ export function PTPageHeader({
   );
 }
 
-export function PTBadge({ children, className }: { children: ReactNode; className?: string }) {
+export function PTBadge({ children, className }: { children: ReactNode; className?: string | undefined }) {
   return (
     <span
       className={cn(
