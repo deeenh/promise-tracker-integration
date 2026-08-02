@@ -257,12 +257,12 @@ export function useCreatePromise() {
 export function useUpdatePromiseStatus() {
   return useTrackerMutation(
     async (input: { promise: PromiseRow; status: string; lock?: boolean }) => {
-      const patch: Record<string, unknown> = { status: input.status };
+      const patch: Partial<PromiseRow> = { status: input.status };
       if (input.status === "fulfilled") {
-        patch["fulfilled_at"] = new Date().toISOString();
-        patch["is_locked"] = input.lock ?? true;
+        patch.fulfilled_at = new Date().toISOString();
+        patch.is_locked = input.lock ?? true;
       }
-      if (input.status === "broken") patch["breach_reason"] = "Deadline missed";
+      if (input.status === "broken") patch.breach_reason = "Deadline missed";
       const { error } = await supabase.from("promises").update(patch).eq("id", input.promise.id);
       if (error) throw error;
       await writeAuditLog({
