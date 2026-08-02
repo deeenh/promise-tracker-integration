@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PromiseTrackerRouteImport } from './routes/promise-tracker'
+import { Route as PromiseTrackerIndexRouteImport } from './routes/promise-tracker.index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,38 @@ const PromiseTrackerRoute = PromiseTrackerRouteImport.update({
   path: '/promise-tracker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PromiseTrackerIndexRoute = PromiseTrackerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PromiseTrackerRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/promise-tracker': typeof PromiseTrackerRoute
+  '/promise-tracker': typeof PromiseTrackerRouteWithChildren
+  '/promise-tracker/': typeof PromiseTrackerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/promise-tracker': typeof PromiseTrackerRoute
+  '/promise-tracker': typeof PromiseTrackerIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/promise-tracker': typeof PromiseTrackerRoute
+  '/promise-tracker': typeof PromiseTrackerRouteWithChildren
+  '/promise-tracker/': typeof PromiseTrackerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/promise-tracker'
+  fullPaths: '/' | '/promise-tracker' | '/promise-tracker/'
   fileRoutesByTo: FileRoutesByTo
   to: '/' | '/promise-tracker'
-  id: '__root__' | '/' | '/promise-tracker'
+  id: '__root__' | '/' | '/promise-tracker' | '/promise-tracker/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PromiseTrackerRoute: typeof PromiseTrackerRoute
+  PromiseTrackerRoute: typeof PromiseTrackerRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +73,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PromiseTrackerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/promise-tracker/': {
+      id: '/promise-tracker/'
+      path: '/'
+      fullPath: '/promise-tracker/'
+      preLoaderRoute: typeof PromiseTrackerIndexRouteImport
+      parentRoute: typeof PromiseTrackerRoute
+    }
   }
 }
 
+interface PromiseTrackerRouteChildren {
+  PromiseTrackerIndexRoute: typeof PromiseTrackerIndexRoute
+}
+
+const PromiseTrackerRouteChildren: PromiseTrackerRouteChildren = {
+  PromiseTrackerIndexRoute: PromiseTrackerIndexRoute,
+}
+
+const PromiseTrackerRouteWithChildren = PromiseTrackerRoute._addFileChildren(
+  PromiseTrackerRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PromiseTrackerRoute: PromiseTrackerRoute,
+  PromiseTrackerRoute: PromiseTrackerRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
