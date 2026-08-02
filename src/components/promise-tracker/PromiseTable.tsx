@@ -301,7 +301,7 @@ export function PromiseTable({
                             )}
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            variant="destructive"
+                            className="text-destructive focus:text-destructive"
                             disabled={row.is_locked}
                             onClick={() => deletePromise.mutate(row)}
                           >
