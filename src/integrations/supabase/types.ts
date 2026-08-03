@@ -109,6 +109,36 @@ export type Database = {
         }
         Relationships: []
       }
+      promise_health_events: {
+        Row: {
+          context: Json
+          created_at: string
+          event: string
+          id: string
+          level: string
+          message: string
+          source: string
+        }
+        Insert: {
+          context?: Json
+          created_at?: string
+          event: string
+          id?: string
+          level?: string
+          message: string
+          source: string
+        }
+        Update: {
+          context?: Json
+          created_at?: string
+          event?: string
+          id?: string
+          level?: string
+          message?: string
+          source?: string
+        }
+        Relationships: []
+      }
       promise_rules: {
         Row: {
           amount: number
@@ -337,7 +367,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      pt_prune_health_events: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
