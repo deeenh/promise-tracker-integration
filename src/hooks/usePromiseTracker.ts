@@ -33,6 +33,7 @@ export const trackerKeys = {
   insights: ["promise-tracker", "insights"] as const,
   logs: ["promise-tracker", "logs"] as const,
   settings: ["promise-tracker", "settings"] as const,
+  health: ["promise-tracker", "health"] as const,
 };
 
 export function usePromises() {
@@ -354,7 +355,7 @@ export function useCreatePromise() {
       message: input.status === "active" ? "Promise activated" : "Promise saved as draft",
       description: `${code} · ${input.title}`,
     };
-  });
+  }, "create_promise");
 }
 
 export function useUpdatePromiseStatus() {
@@ -375,7 +376,7 @@ export function useUpdatePromiseStatus() {
       });
       return { message: "Status updated", description: `${input.promise.code} → ${input.status}` };
     },
-  );
+  , "update_status");
 }
 
 export function useExtendDeadline() {
@@ -398,7 +399,7 @@ export function useExtendDeadline() {
       details: `Deadline extended by ${input.hours} hours`,
     });
     return { message: "Deadline extended", description: `${input.promise.code} +${input.hours}h` };
-  });
+  }, "extend_deadline");
 }
 
 export function useEscalatePromise() {
@@ -420,7 +421,7 @@ export function useEscalatePromise() {
       details: `Escalated to Level ${level} — ${input.reason}`,
     });
     return { message: `Escalated to Level ${level}`, description: input.promise.code };
-  });
+  }, "escalate");
 }
 
 export function useResolveEscalation() {
@@ -436,7 +437,7 @@ export function useResolveEscalation() {
       details: `Escalation marked ${input.status}`,
     });
     return { message: "Escalation updated", description: `${input.promise.code} → ${input.status}` };
-  });
+  }, "resolve_escalation");
 }
 
 export function useApplyFine() {
@@ -452,7 +453,7 @@ export function useApplyFine() {
       details: `Fine of ${input.amount} applied via ${input.rule}`,
     });
     return { message: "Fine applied", description: `${input.promise.code} · ${input.rule}` };
-  });
+  }, "apply_fine");
 }
 
 export function useReleaseTip() {
@@ -468,7 +469,7 @@ export function useReleaseTip() {
       details: `Tip of ${input.amount} released via ${input.rule}`,
     });
     return { message: "Tip released", description: `${input.promise.code} · ${input.rule}` };
-  });
+  }, "release_tip");
 }
 
 export function useToggleLock() {
@@ -485,7 +486,7 @@ export function useToggleLock() {
       details: locked ? "Record locked from further edits" : "Record unlocked for edits",
     });
     return { message: locked ? "Promise locked" : "Promise unlocked", description: promiseRow.code };
-  });
+  }, "toggle_lock");
 }
 
 export function useDeletePromise() {
@@ -498,7 +499,7 @@ export function useDeletePromise() {
       details: `${promiseRow.title} removed from the registry`,
     });
     return { message: "Promise deleted", description: promiseRow.code };
-  });
+  }, "delete_promise");
 }
 
 export function useSaveRule() {
@@ -554,7 +555,7 @@ export function useSaveRule() {
       await writeAuditLog({ action: "Rule Created", details: `${input.name} created (${input.kind})` });
       return { message: "Rule created", description: input.name };
     },
-  );
+  , "save_rule");
 }
 
 export function useDeleteRule() {
@@ -563,7 +564,7 @@ export function useDeleteRule() {
     if (error) throw error;
     await writeAuditLog({ action: "Rule Deleted", details: `${rule.name} removed` });
     return { message: "Rule deleted", description: rule.name };
-  });
+  }, "delete_rule");
 }
 
 export function useSaveSettings() {
@@ -580,7 +581,7 @@ export function useSaveSettings() {
       });
       return { message: "Settings saved", description: "Promise tracker settings updated" };
     },
-  );
+  , "save_settings");
 }
 
 export function useSaveCategory() {
@@ -602,7 +603,7 @@ export function useSaveCategory() {
       await writeAuditLog({ action: "Category Created", details: `${input.label} created` });
       return { message: "Category created", description: input.label };
     },
-  );
+  , "save_category");
 }
 
 export function useSaveSubcategory() {
@@ -615,7 +616,7 @@ export function useSaveSubcategory() {
       await writeAuditLog({ action: "Sub Category Created", details: `${input.label} created` });
       return { message: "Sub category created", description: input.label };
     },
-  );
+  , "save_subcategory");
 }
 
 /** Aggregated live metrics used across the tracker screens. */
