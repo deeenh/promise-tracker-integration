@@ -129,6 +129,22 @@ export function useSettings() {
   });
 }
 
+export function useHealthEvents(limit = 100) {
+  return useQuery({
+    queryKey: [...trackerKeys.health, limit],
+    queryFn: async (): Promise<PromiseHealthEventRow[]> => {
+      const { data, error } = await supabase
+        .from("promise_health_events")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchInterval: 60000,
+  });
+}
+
 export async function writeAuditLog(entry: {
   action: string;
   promiseCode?: string | null;
@@ -141,7 +157,17 @@ export async function writeAuditLog(entry: {
     actor_role: TRACKER_ACTOR_ROLE,
     details: entry.details,
   });
-  if (error) throw error;
+  if (error) {
+    // Audit-log writes are compliance critical: surface the failure loudly.
+    void reportHealth({
+      source: "audit-log",
+      event: entry.action,
+      message: errorMessage(error),
+      context: { promise_code: entry.promiseCode ?? null, details: entry.details },
+    });
+    toast.error("Audit log write failed", { description: errorMessage(error) });
+    throw error;
+  }
 }
 
 export function useLogAction() {
@@ -152,14 +178,61 @@ export function useLogAction() {
   });
 }
 
-/** Live updates on promises and audit logs. */
+export type RealtimeStatus = "connecting" | "live" | "reconnecting" | "offline";
+
+const RECONNECT_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
+
+/**
+ * Live updates on promises, audit logs and health events with graceful
+ * reconnection (exponential backoff), a user-visible status and monitoring.
+ */
 export function useTrackerRealtime() {
   const queryClient = useQueryClient();
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [status, setStatus] = useState<RealtimeStatus>("connecting");
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [manualRetry, setManualRetry] = useState(0);
+  const attemptRef = useRef(0);
+
+  attemptRef.current = attempt;
+
+  const retryNow = useCallback(() => {
+    setAttempt(0);
+    setStatus("connecting");
+    setManualRetry((value) => value + 1);
+  }, []);
 
   useEffect(() => {
+    let disposed = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const refetchAll = () => {
+      queryClient.invalidateQueries({ queryKey: ["promise-tracker"] });
+      setLastUpdate(new Date());
+    };
+
+    const scheduleReconnect = (reason: string) => {
+      if (disposed) return;
+      const current = attemptRef.current;
+      const delay = RECONNECT_DELAYS_MS[Math.min(current, RECONNECT_DELAYS_MS.length - 1)]!;
+      setStatus(current === 0 ? "reconnecting" : "offline");
+      setLastError(reason);
+      void reportHealth({
+        source: "realtime",
+        level: current >= 2 ? "error" : "warning",
+        event: "subscription_lost",
+        message: reason,
+        context: { attempt: current + 1, retry_in_ms: delay },
+      });
+      reconnectTimer = setTimeout(() => {
+        if (disposed) return;
+        setAttempt(current + 1);
+      }, delay);
+    };
+
     const channel = supabase
-      .channel("promise-tracker-realtime")
+      .channel(`promise-tracker-realtime-${manualRetry}-${attempt}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "promises" }, () => {
         queryClient.invalidateQueries({ queryKey: trackerKeys.promises });
         queryClient.invalidateQueries({ queryKey: trackerKeys.insights });
@@ -169,14 +242,34 @@ export function useTrackerRealtime() {
         queryClient.invalidateQueries({ queryKey: trackerKeys.logs });
         setLastUpdate(new Date());
       })
-      .subscribe();
+      .on("postgres_changes", { event: "*", schema: "public", table: "promise_health_events" }, () => {
+        queryClient.invalidateQueries({ queryKey: trackerKeys.health });
+      })
+      .subscribe((state, error) => {
+        if (disposed) return;
+        if (state === "SUBSCRIBED") {
+          setStatus("live");
+          setLastError(null);
+          // A fresh subscription may have missed events while it was down.
+          if (attemptRef.current > 0 || manualRetry > 0) refetchAll();
+          setAttempt(0);
+          return;
+        }
+        if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
+          scheduleReconnect(
+            error ? errorMessage(error) : `Realtime channel ${state.toLowerCase().replace("_", " ")}`,
+          );
+        }
+      });
 
     return () => {
+      disposed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, attempt, manualRetry]);
 
-  return { lastUpdate };
+  return { lastUpdate, status, lastError, retryNow, attempt };
 }
 
 /** Ticking clock used for live countdowns. */
@@ -191,6 +284,7 @@ export function useTicker(intervalMs = 1000) {
 
 function useTrackerMutation<TVariables>(
   handler: (variables: TVariables) => Promise<{ message: string; description?: string }>,
+  event = "mutation",
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -199,9 +293,13 @@ function useTrackerMutation<TVariables>(
       queryClient.invalidateQueries({ queryKey: ["promise-tracker"] });
       toast.success(result.message, { description: result.description });
     },
-    onError: (error: Error) => toast.error("Action failed", { description: error.message }),
+    onError: (error: Error) => {
+      void reportHealth({ source: "mutation", event, message: errorMessage(error) });
+      toast.error("Action failed", { description: error.message });
+    },
   });
 }
+
 
 async function nextPromiseCode() {
   const { data, error } = await supabase
