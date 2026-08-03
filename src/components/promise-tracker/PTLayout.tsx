@@ -1,15 +1,75 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet } from "@tanstack/react-router";
-import { Menu, RadioTower } from "lucide-react";
+import { Menu, RadioTower, RefreshCw, WifiOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import { PTSidebar } from "./PTSidebar";
 import { useTrackerRealtime, useTrackerMetrics } from "@/hooks/usePromiseTracker";
 
+function RealtimeIndicator() {
+  const { lastUpdate, status, lastError, retryNow } = useTrackerRealtime();
+  const [mounted, setMounted] = useState(false);
+
+  // Rendered only after hydration: the clock differs between server and client.
+  useEffect(() => setMounted(true), []);
+
+  const meta = {
+    connecting: {
+      label: "Connecting…",
+      className: "border-border bg-muted/40 text-muted-foreground",
+      icon: RadioTower,
+    },
+    live: {
+      label: "Live",
+      className: "border-success/30 bg-success/10 text-success",
+      icon: RadioTower,
+    },
+    reconnecting: {
+      label: "Reconnecting…",
+      className: "border-warning/30 bg-warning/10 text-warning",
+      icon: RefreshCw,
+    },
+    offline: {
+      label: "Live updates offline",
+      className: "border-destructive/30 bg-destructive/10 text-destructive",
+      icon: WifiOff,
+    },
+  }[status];
+
+  const Icon = meta.icon;
+
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className={cn(
+          "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
+          meta.className,
+        )}
+        title={lastError ?? undefined}
+        data-testid="realtime-status"
+        data-status={status}
+      >
+        <Icon className={cn("size-3.5", status === "reconnecting" && "animate-spin")} />
+        {meta.label}
+        {status === "live" && mounted && lastUpdate ? (
+          <span className="hidden sm:inline">
+            · {lastUpdate.toLocaleTimeString("en-GB", { hour12: false })}
+          </span>
+        ) : null}
+      </span>
+      {status === "offline" ? (
+        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" onClick={retryNow}>
+          Retry
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 export function PTLayout() {
   const [open, setOpen] = useState(false);
-  const { lastUpdate } = useTrackerRealtime();
   const { metrics } = useTrackerMetrics();
 
   return (
@@ -46,10 +106,7 @@ export function PTLayout() {
                 <span className="font-medium text-destructive">{metrics.overdue}</span> overdue
               </span>
             </div>
-            <span className="flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-xs text-success">
-              <RadioTower className="size-3.5" />
-              Live · {lastUpdate.toLocaleTimeString("en-GB", { hour12: false })}
-            </span>
+            <RealtimeIndicator />
           </div>
         </header>
 
@@ -60,3 +117,4 @@ export function PTLayout() {
     </div>
   );
 }
+
