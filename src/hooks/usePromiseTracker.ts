@@ -18,7 +18,6 @@ import type {
 
 export type PromiseHealthEventRow = Tables<"promise_health_events">;
 
-
 /** The Promise Tracker console runs inside Software Vala's operator shell. */
 export const TRACKER_ACTOR = "console@softwarevala.com";
 export const TRACKER_ACTOR_ROLE = "Console Operator";
@@ -243,9 +242,13 @@ export function useTrackerRealtime() {
         queryClient.invalidateQueries({ queryKey: trackerKeys.logs });
         setLastUpdate(new Date());
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "promise_health_events" }, () => {
-        queryClient.invalidateQueries({ queryKey: trackerKeys.health });
-      })
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "promise_health_events" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: trackerKeys.health });
+        },
+      )
       .subscribe((state, error) => {
         if (disposed) return;
         if (state === "SUBSCRIBED") {
@@ -258,7 +261,9 @@ export function useTrackerRealtime() {
         }
         if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
           scheduleReconnect(
-            error ? errorMessage(error) : `Realtime channel ${state.toLowerCase().replace("_", " ")}`,
+            error
+              ? errorMessage(error)
+              : `Realtime channel ${state.toLowerCase().replace("_", " ")}`,
           );
         }
       });
@@ -300,7 +305,6 @@ function useTrackerMutation<TVariables>(
     },
   });
 }
-
 
 async function nextPromiseCode() {
   const { data, error } = await supabase
@@ -375,7 +379,9 @@ export function useUpdatePromiseStatus() {
         details: `Status changed from ${input.promise.status} to ${input.status}`,
       });
       return { message: "Status updated", description: `${input.promise.code} → ${input.status}` };
-    },, "update_status");
+    },
+    "update_status",
+  );
 }
 
 export function useExtendDeadline() {
@@ -435,40 +441,49 @@ export function useResolveEscalation() {
       promiseCode: input.promise.code,
       details: `Escalation marked ${input.status}`,
     });
-    return { message: "Escalation updated", description: `${input.promise.code} → ${input.status}` };
+    return {
+      message: "Escalation updated",
+      description: `${input.promise.code} → ${input.status}`,
+    };
   }, "resolve_escalation");
 }
 
 export function useApplyFine() {
-  return useTrackerMutation(async (input: { promise: PromiseRow; amount: number; rule: string }) => {
-    const { error } = await supabase
-      .from("promises")
-      .update({ fine_amount: Number(input.promise.fine_amount) + input.amount })
-      .eq("id", input.promise.id);
-    if (error) throw error;
-    await writeAuditLog({
-      action: "Fine Applied",
-      promiseCode: input.promise.code,
-      details: `Fine of ${input.amount} applied via ${input.rule}`,
-    });
-    return { message: "Fine applied", description: `${input.promise.code} · ${input.rule}` };
-  }, "apply_fine");
+  return useTrackerMutation(
+    async (input: { promise: PromiseRow; amount: number; rule: string }) => {
+      const { error } = await supabase
+        .from("promises")
+        .update({ fine_amount: Number(input.promise.fine_amount) + input.amount })
+        .eq("id", input.promise.id);
+      if (error) throw error;
+      await writeAuditLog({
+        action: "Fine Applied",
+        promiseCode: input.promise.code,
+        details: `Fine of ${input.amount} applied via ${input.rule}`,
+      });
+      return { message: "Fine applied", description: `${input.promise.code} · ${input.rule}` };
+    },
+    "apply_fine",
+  );
 }
 
 export function useReleaseTip() {
-  return useTrackerMutation(async (input: { promise: PromiseRow; amount: number; rule: string }) => {
-    const { error } = await supabase
-      .from("promises")
-      .update({ tip_amount: Number(input.promise.tip_amount) + input.amount })
-      .eq("id", input.promise.id);
-    if (error) throw error;
-    await writeAuditLog({
-      action: "Tip Released",
-      promiseCode: input.promise.code,
-      details: `Tip of ${input.amount} released via ${input.rule}`,
-    });
-    return { message: "Tip released", description: `${input.promise.code} · ${input.rule}` };
-  }, "release_tip");
+  return useTrackerMutation(
+    async (input: { promise: PromiseRow; amount: number; rule: string }) => {
+      const { error } = await supabase
+        .from("promises")
+        .update({ tip_amount: Number(input.promise.tip_amount) + input.amount })
+        .eq("id", input.promise.id);
+      if (error) throw error;
+      await writeAuditLog({
+        action: "Tip Released",
+        promiseCode: input.promise.code,
+        details: `Tip of ${input.amount} released via ${input.rule}`,
+      });
+      return { message: "Tip released", description: `${input.promise.code} · ${input.rule}` };
+    },
+    "release_tip",
+  );
 }
 
 export function useToggleLock() {
@@ -484,7 +499,10 @@ export function useToggleLock() {
       promiseCode: promiseRow.code,
       details: locked ? "Record locked from further edits" : "Record unlocked for edits",
     });
-    return { message: locked ? "Promise locked" : "Promise unlocked", description: promiseRow.code };
+    return {
+      message: locked ? "Promise locked" : "Promise unlocked",
+      description: promiseRow.code,
+    };
   }, "toggle_lock");
 }
 
@@ -551,9 +569,14 @@ export function useSaveRule() {
         is_active: input.is_active,
       });
       if (error) throw error;
-      await writeAuditLog({ action: "Rule Created", details: `${input.name} created (${input.kind})` });
+      await writeAuditLog({
+        action: "Rule Created",
+        details: `${input.name} created (${input.kind})`,
+      });
       return { message: "Rule created", description: input.name };
-    },, "save_rule");
+    },
+    "save_rule",
+  );
 }
 
 export function useDeleteRule() {
@@ -578,7 +601,9 @@ export function useSaveSettings() {
         details: input.label ?? "Promise tracker settings updated",
       });
       return { message: "Settings saved", description: "Promise tracker settings updated" };
-    },, "save_settings");
+    },
+    "save_settings",
+  );
 }
 
 export function useSaveCategory() {
@@ -599,19 +624,20 @@ export function useSaveCategory() {
       if (error) throw error;
       await writeAuditLog({ action: "Category Created", details: `${input.label} created` });
       return { message: "Category created", description: input.label };
-    },, "save_category");
+    },
+    "save_category",
+  );
 }
 
 export function useSaveSubcategory() {
-  return useTrackerMutation(
-    async (input: { categoryId: string; slug: string; label: string }) => {
-      const { error } = await supabase
-        .from("promise_subcategories")
-        .insert({ category_id: input.categoryId, slug: input.slug, label: input.label });
-      if (error) throw error;
-      await writeAuditLog({ action: "Sub Category Created", details: `${input.label} created` });
-      return { message: "Sub category created", description: input.label };
-    },, "save_subcategory");
+  return useTrackerMutation(async (input: { categoryId: string; slug: string; label: string }) => {
+    const { error } = await supabase
+      .from("promise_subcategories")
+      .insert({ category_id: input.categoryId, slug: input.slug, label: input.label });
+    if (error) throw error;
+    await writeAuditLog({ action: "Sub Category Created", details: `${input.label} created` });
+    return { message: "Sub category created", description: input.label };
+  }, "save_subcategory");
 }
 
 /** Aggregated live metrics used across the tracker screens. */
@@ -622,8 +648,7 @@ export function useTrackerMetrics() {
     const now = Date.now();
     const byStatus = (status: string) => promises.filter((p) => p.status === status);
     const overdue = promises.filter(
-      (p) =>
-        !["fulfilled"].includes(p.status) && new Date(p.deadline).getTime() < now,
+      (p) => !["fulfilled"].includes(p.status) && new Date(p.deadline).getTime() < now,
     );
     const fulfilled = byStatus("fulfilled");
     const onTime = fulfilled.filter(
