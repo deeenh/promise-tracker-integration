@@ -103,7 +103,30 @@ function PTSettings() {
             />
           </div>
         ))}
+
+        {times.map((entry) => (
+          <div key={entry.key} className="space-y-2">
+            <Label htmlFor={entry.key}>{entry.label}</Label>
+            <Input
+              id={entry.key}
+              type="time"
+              defaultValue={String(settings[entry.key])}
+              onBlur={(event) => {
+                const value = event.target.value;
+                if (!value || value === settings[entry.key]) return;
+                saveSettings.mutate({
+                  id: settings.id,
+                  patch: { [entry.key]: value },
+                  label: `${entry.label} set to ${value}`,
+                });
+              }}
+            />
+          </div>
+        ))}
       </div>
+
+      <SystemHealthPanel />
     </div>
   );
 }
+
