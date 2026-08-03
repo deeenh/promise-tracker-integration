@@ -375,8 +375,7 @@ export function useUpdatePromiseStatus() {
         details: `Status changed from ${input.promise.status} to ${input.status}`,
       });
       return { message: "Status updated", description: `${input.promise.code} → ${input.status}` };
-    },
-  , "update_status");
+    },, "update_status");
 }
 
 export function useExtendDeadline() {
@@ -554,8 +553,7 @@ export function useSaveRule() {
       if (error) throw error;
       await writeAuditLog({ action: "Rule Created", details: `${input.name} created (${input.kind})` });
       return { message: "Rule created", description: input.name };
-    },
-  , "save_rule");
+    },, "save_rule");
 }
 
 export function useDeleteRule() {
@@ -580,8 +578,7 @@ export function useSaveSettings() {
         details: input.label ?? "Promise tracker settings updated",
       });
       return { message: "Settings saved", description: "Promise tracker settings updated" };
-    },
-  , "save_settings");
+    },, "save_settings");
 }
 
 export function useSaveCategory() {
@@ -602,8 +599,7 @@ export function useSaveCategory() {
       if (error) throw error;
       await writeAuditLog({ action: "Category Created", details: `${input.label} created` });
       return { message: "Category created", description: input.label };
-    },
-  , "save_category");
+    },, "save_category");
 }
 
 export function useSaveSubcategory() {
@@ -615,8 +611,7 @@ export function useSaveSubcategory() {
       if (error) throw error;
       await writeAuditLog({ action: "Sub Category Created", details: `${input.label} created` });
       return { message: "Sub category created", description: input.label };
-    },
-  , "save_subcategory");
+    },, "save_subcategory");
 }
 
 /** Aggregated live metrics used across the tracker screens. */
