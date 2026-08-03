@@ -1,15 +1,7 @@
-import { useMemo, useState } from "react";
-import { Download, Search, MoreHorizontal, Lock, Unlock } from "lucide-react";
+import { useMemo } from "react";
+import { Download, MoreHorizontal, Lock, Unlock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -34,8 +26,11 @@ import {
   StatusBadge,
 } from "./PTPrimitives";
 import {
-  PROMISE_PRIORITIES,
-  PROMISE_STATUSES,
+  PromiseFilterBar,
+  applyPromiseFilters,
+  usePromiseFilters,
+} from "./PromiseFilters";
+import {
   downloadCsv,
   formatCurrency,
   formatDateTime,
@@ -67,9 +62,7 @@ export function PromiseTable({
   emptyDescription?: string;
   exportName?: string;
 }) {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [priority, setPriority] = useState("all");
+  const { filters, update, reset } = usePromiseFilters();
   const now = useTicker(30000);
 
   const updateStatus = useUpdatePromiseStatus();
@@ -79,20 +72,10 @@ export function PromiseTable({
   const deletePromise = useDeletePromise();
   const logAction = useLogAction();
 
-  const rows = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return promises.filter((promiseRow) => {
-      const matchesTerm =
-        !term ||
-        [promiseRow.code, promiseRow.title, promiseRow.owner, promiseRow.receiver]
-          .join(" ")
-          .toLowerCase()
-          .includes(term);
-      const matchesStatus = status === "all" || promiseRow.status === status;
-      const matchesPriority = priority === "all" || promiseRow.priority === priority;
-      return matchesTerm && matchesStatus && matchesPriority;
-    });
-  }, [promises, search, status, priority]);
+  const rows = useMemo(
+    () => (showFilters ? applyPromiseFilters(promises, filters, now.getTime()) : promises),
+    [promises, filters, showFilters, now],
+  );
 
   const handleExport = () => {
     downloadCsv(
@@ -123,48 +106,21 @@ export function PromiseTable({
   return (
     <div className="space-y-4">
       {showFilters ? (
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-56 flex-1">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search code, title, owner or receiver"
-              className="pl-9"
-            />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {PROMISE_STATUSES.map((entry) => (
-                <SelectItem key={entry} value={entry} className="capitalize">
-                  {entry}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={priority} onValueChange={setPriority}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All priorities</SelectItem>
-              {PROMISE_PRIORITIES.map((entry) => (
-                <SelectItem key={entry} value={entry} className="capitalize">
-                  {entry}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={handleExport} disabled={rows.length === 0}>
-            <Download className="size-4" />
-            Export CSV
-          </Button>
-        </div>
+        <PromiseFilterBar
+          promises={promises}
+          filters={filters}
+          onChange={update}
+          onReset={reset}
+          resultCount={rows.length}
+          actions={
+            <Button variant="outline" onClick={handleExport} disabled={rows.length === 0}>
+              <Download className="size-4" />
+              Export CSV
+            </Button>
+          }
+        />
       ) : null}
+
 
       {rows.length === 0 ? (
         <EmptyState title={emptyTitle} description={emptyDescription} />
