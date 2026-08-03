@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { errorMessage, reportHealth } from "@/lib/promise-tracker/monitoring";
+import type { Tables } from "@/integrations/supabase/types";
 import type {
   PromiseAuditLogRow,
   PromiseCategoryRow,
@@ -13,6 +15,9 @@ import type {
   PromiseSubcategoryRow,
   PromiseWithCategory,
 } from "@/lib/promise-tracker/constants";
+
+export type PromiseHealthEventRow = Tables<"promise_health_events">;
+
 
 /** The Promise Tracker console runs inside Software Vala's operator shell. */
 export const TRACKER_ACTOR = "console@softwarevala.com";
