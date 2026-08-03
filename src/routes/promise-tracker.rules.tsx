@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { RuleFormDialog } from "@/components/promise-tracker/RuleFormDialog";
 import { PTPageHeader } from "@/components/promise-tracker/PTPrimitives";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -32,7 +33,11 @@ function PTRules() {
 
   const groups = [
     { kind: "fine" as const, title: "Fine rules", hint: "Applied when a promise is breached." },
-    { kind: "tip" as const, title: "Tip rules", hint: "Released when a promise beats its deadline." },
+    {
+      kind: "tip" as const,
+      title: "Tip rules",
+      hint: "Released when a promise beats its deadline.",
+    },
   ];
 
   return (
@@ -45,8 +50,13 @@ function PTRules() {
       <div className="grid gap-6 lg:grid-cols-2">
         {groups.map((group) => (
           <section key={group.kind}>
-            <h2 className="mb-1 font-display text-lg font-semibold">{group.title}</h2>
-            <p className="mb-3 text-sm text-muted-foreground">{group.hint}</p>
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-display text-lg font-semibold">{group.title}</h2>
+                <p className="text-sm text-muted-foreground">{group.hint}</p>
+              </div>
+              <RuleFormDialog kind={group.kind} />
+            </div>
             <div className="glass-panel divide-y divide-border">
               {rules
                 .filter((rule) => rule.kind === group.kind)

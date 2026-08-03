@@ -121,9 +121,7 @@ export function RuleFormDialog({ kind }: { kind: "fine" | "tip" }) {
             </div>
             <Switch
               checked={form.auto_apply}
-              onCheckedChange={(checked) =>
-                setForm((prev) => ({ ...prev, auto_apply: checked }))
-              }
+              onCheckedChange={(checked) => setForm((prev) => ({ ...prev, auto_apply: checked }))}
             />
           </div>
 
