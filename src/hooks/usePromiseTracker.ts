@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { errorMessage, reportHealth } from "@/lib/promise-tracker/monitoring";
+import type { Tables } from "@/integrations/supabase/types";
 import type {
   PromiseAuditLogRow,
   PromiseCategoryRow,
@@ -13,6 +15,8 @@ import type {
   PromiseSubcategoryRow,
   PromiseWithCategory,
 } from "@/lib/promise-tracker/constants";
+
+export type PromiseHealthEventRow = Tables<"promise_health_events">;
 
 /** The Promise Tracker console runs inside Software Vala's operator shell. */
 export const TRACKER_ACTOR = "console@softwarevala.com";
@@ -28,6 +32,7 @@ export const trackerKeys = {
   insights: ["promise-tracker", "insights"] as const,
   logs: ["promise-tracker", "logs"] as const,
   settings: ["promise-tracker", "settings"] as const,
+  health: ["promise-tracker", "health"] as const,
 };
 
 export function usePromises() {
@@ -124,6 +129,22 @@ export function useSettings() {
   });
 }
 
+export function useHealthEvents(limit = 100) {
+  return useQuery({
+    queryKey: [...trackerKeys.health, limit],
+    queryFn: async (): Promise<PromiseHealthEventRow[]> => {
+      const { data, error } = await supabase
+        .from("promise_health_events")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchInterval: 60000,
+  });
+}
+
 export async function writeAuditLog(entry: {
   action: string;
   promiseCode?: string | null;
@@ -136,7 +157,17 @@ export async function writeAuditLog(entry: {
     actor_role: TRACKER_ACTOR_ROLE,
     details: entry.details,
   });
-  if (error) throw error;
+  if (error) {
+    // Audit-log writes are compliance critical: surface the failure loudly.
+    void reportHealth({
+      source: "audit-log",
+      event: entry.action,
+      message: errorMessage(error),
+      context: { promise_code: entry.promiseCode ?? null, details: entry.details },
+    });
+    toast.error("Audit log write failed", { description: errorMessage(error) });
+    throw error;
+  }
 }
 
 export function useLogAction() {
@@ -147,14 +178,61 @@ export function useLogAction() {
   });
 }
 
-/** Live updates on promises and audit logs. */
+export type RealtimeStatus = "connecting" | "live" | "reconnecting" | "offline";
+
+const RECONNECT_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
+
+/**
+ * Live updates on promises, audit logs and health events with graceful
+ * reconnection (exponential backoff), a user-visible status and monitoring.
+ */
 export function useTrackerRealtime() {
   const queryClient = useQueryClient();
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [status, setStatus] = useState<RealtimeStatus>("connecting");
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [manualRetry, setManualRetry] = useState(0);
+  const attemptRef = useRef(0);
+
+  attemptRef.current = attempt;
+
+  const retryNow = useCallback(() => {
+    setAttempt(0);
+    setStatus("connecting");
+    setManualRetry((value) => value + 1);
+  }, []);
 
   useEffect(() => {
+    let disposed = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const refetchAll = () => {
+      queryClient.invalidateQueries({ queryKey: ["promise-tracker"] });
+      setLastUpdate(new Date());
+    };
+
+    const scheduleReconnect = (reason: string) => {
+      if (disposed) return;
+      const current = attemptRef.current;
+      const delay = RECONNECT_DELAYS_MS[Math.min(current, RECONNECT_DELAYS_MS.length - 1)]!;
+      setStatus(current === 0 ? "reconnecting" : "offline");
+      setLastError(reason);
+      void reportHealth({
+        source: "realtime",
+        level: current >= 2 ? "error" : "warning",
+        event: "subscription_lost",
+        message: reason,
+        context: { attempt: current + 1, retry_in_ms: delay },
+      });
+      reconnectTimer = setTimeout(() => {
+        if (disposed) return;
+        setAttempt(current + 1);
+      }, delay);
+    };
+
     const channel = supabase
-      .channel("promise-tracker-realtime")
+      .channel(`promise-tracker-realtime-${manualRetry}-${attempt}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "promises" }, () => {
         queryClient.invalidateQueries({ queryKey: trackerKeys.promises });
         queryClient.invalidateQueries({ queryKey: trackerKeys.insights });
@@ -164,14 +242,40 @@ export function useTrackerRealtime() {
         queryClient.invalidateQueries({ queryKey: trackerKeys.logs });
         setLastUpdate(new Date());
       })
-      .subscribe();
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "promise_health_events" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: trackerKeys.health });
+        },
+      )
+      .subscribe((state, error) => {
+        if (disposed) return;
+        if (state === "SUBSCRIBED") {
+          setStatus("live");
+          setLastError(null);
+          // A fresh subscription may have missed events while it was down.
+          if (attemptRef.current > 0 || manualRetry > 0) refetchAll();
+          setAttempt(0);
+          return;
+        }
+        if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
+          scheduleReconnect(
+            error
+              ? errorMessage(error)
+              : `Realtime channel ${state.toLowerCase().replace("_", " ")}`,
+          );
+        }
+      });
 
     return () => {
+      disposed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, attempt, manualRetry]);
 
-  return { lastUpdate };
+  return { lastUpdate, status, lastError, retryNow, attempt };
 }
 
 /** Ticking clock used for live countdowns. */
@@ -186,6 +290,7 @@ export function useTicker(intervalMs = 1000) {
 
 function useTrackerMutation<TVariables>(
   handler: (variables: TVariables) => Promise<{ message: string; description?: string }>,
+  event = "mutation",
 ) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -194,7 +299,10 @@ function useTrackerMutation<TVariables>(
       queryClient.invalidateQueries({ queryKey: ["promise-tracker"] });
       toast.success(result.message, { description: result.description });
     },
-    onError: (error: Error) => toast.error("Action failed", { description: error.message }),
+    onError: (error: Error) => {
+      void reportHealth({ source: "mutation", event, message: errorMessage(error) });
+      toast.error("Action failed", { description: error.message });
+    },
   });
 }
 
@@ -251,7 +359,7 @@ export function useCreatePromise() {
       message: input.status === "active" ? "Promise activated" : "Promise saved as draft",
       description: `${code} · ${input.title}`,
     };
-  });
+  }, "create_promise");
 }
 
 export function useUpdatePromiseStatus() {
@@ -272,6 +380,7 @@ export function useUpdatePromiseStatus() {
       });
       return { message: "Status updated", description: `${input.promise.code} → ${input.status}` };
     },
+    "update_status",
   );
 }
 
@@ -295,7 +404,7 @@ export function useExtendDeadline() {
       details: `Deadline extended by ${input.hours} hours`,
     });
     return { message: "Deadline extended", description: `${input.promise.code} +${input.hours}h` };
-  });
+  }, "extend_deadline");
 }
 
 export function useEscalatePromise() {
@@ -317,7 +426,7 @@ export function useEscalatePromise() {
       details: `Escalated to Level ${level} — ${input.reason}`,
     });
     return { message: `Escalated to Level ${level}`, description: input.promise.code };
-  });
+  }, "escalate");
 }
 
 export function useResolveEscalation() {
@@ -332,40 +441,49 @@ export function useResolveEscalation() {
       promiseCode: input.promise.code,
       details: `Escalation marked ${input.status}`,
     });
-    return { message: "Escalation updated", description: `${input.promise.code} → ${input.status}` };
-  });
+    return {
+      message: "Escalation updated",
+      description: `${input.promise.code} → ${input.status}`,
+    };
+  }, "resolve_escalation");
 }
 
 export function useApplyFine() {
-  return useTrackerMutation(async (input: { promise: PromiseRow; amount: number; rule: string }) => {
-    const { error } = await supabase
-      .from("promises")
-      .update({ fine_amount: Number(input.promise.fine_amount) + input.amount })
-      .eq("id", input.promise.id);
-    if (error) throw error;
-    await writeAuditLog({
-      action: "Fine Applied",
-      promiseCode: input.promise.code,
-      details: `Fine of ${input.amount} applied via ${input.rule}`,
-    });
-    return { message: "Fine applied", description: `${input.promise.code} · ${input.rule}` };
-  });
+  return useTrackerMutation(
+    async (input: { promise: PromiseRow; amount: number; rule: string }) => {
+      const { error } = await supabase
+        .from("promises")
+        .update({ fine_amount: Number(input.promise.fine_amount) + input.amount })
+        .eq("id", input.promise.id);
+      if (error) throw error;
+      await writeAuditLog({
+        action: "Fine Applied",
+        promiseCode: input.promise.code,
+        details: `Fine of ${input.amount} applied via ${input.rule}`,
+      });
+      return { message: "Fine applied", description: `${input.promise.code} · ${input.rule}` };
+    },
+    "apply_fine",
+  );
 }
 
 export function useReleaseTip() {
-  return useTrackerMutation(async (input: { promise: PromiseRow; amount: number; rule: string }) => {
-    const { error } = await supabase
-      .from("promises")
-      .update({ tip_amount: Number(input.promise.tip_amount) + input.amount })
-      .eq("id", input.promise.id);
-    if (error) throw error;
-    await writeAuditLog({
-      action: "Tip Released",
-      promiseCode: input.promise.code,
-      details: `Tip of ${input.amount} released via ${input.rule}`,
-    });
-    return { message: "Tip released", description: `${input.promise.code} · ${input.rule}` };
-  });
+  return useTrackerMutation(
+    async (input: { promise: PromiseRow; amount: number; rule: string }) => {
+      const { error } = await supabase
+        .from("promises")
+        .update({ tip_amount: Number(input.promise.tip_amount) + input.amount })
+        .eq("id", input.promise.id);
+      if (error) throw error;
+      await writeAuditLog({
+        action: "Tip Released",
+        promiseCode: input.promise.code,
+        details: `Tip of ${input.amount} released via ${input.rule}`,
+      });
+      return { message: "Tip released", description: `${input.promise.code} · ${input.rule}` };
+    },
+    "release_tip",
+  );
 }
 
 export function useToggleLock() {
@@ -381,8 +499,11 @@ export function useToggleLock() {
       promiseCode: promiseRow.code,
       details: locked ? "Record locked from further edits" : "Record unlocked for edits",
     });
-    return { message: locked ? "Promise locked" : "Promise unlocked", description: promiseRow.code };
-  });
+    return {
+      message: locked ? "Promise locked" : "Promise unlocked",
+      description: promiseRow.code,
+    };
+  }, "toggle_lock");
 }
 
 export function useDeletePromise() {
@@ -395,7 +516,7 @@ export function useDeletePromise() {
       details: `${promiseRow.title} removed from the registry`,
     });
     return { message: "Promise deleted", description: promiseRow.code };
-  });
+  }, "delete_promise");
 }
 
 export function useSaveRule() {
@@ -448,9 +569,13 @@ export function useSaveRule() {
         is_active: input.is_active,
       });
       if (error) throw error;
-      await writeAuditLog({ action: "Rule Created", details: `${input.name} created (${input.kind})` });
+      await writeAuditLog({
+        action: "Rule Created",
+        details: `${input.name} created (${input.kind})`,
+      });
       return { message: "Rule created", description: input.name };
     },
+    "save_rule",
   );
 }
 
@@ -460,7 +585,7 @@ export function useDeleteRule() {
     if (error) throw error;
     await writeAuditLog({ action: "Rule Deleted", details: `${rule.name} removed` });
     return { message: "Rule deleted", description: rule.name };
-  });
+  }, "delete_rule");
 }
 
 export function useSaveSettings() {
@@ -477,6 +602,7 @@ export function useSaveSettings() {
       });
       return { message: "Settings saved", description: "Promise tracker settings updated" };
     },
+    "save_settings",
   );
 }
 
@@ -499,20 +625,19 @@ export function useSaveCategory() {
       await writeAuditLog({ action: "Category Created", details: `${input.label} created` });
       return { message: "Category created", description: input.label };
     },
+    "save_category",
   );
 }
 
 export function useSaveSubcategory() {
-  return useTrackerMutation(
-    async (input: { categoryId: string; slug: string; label: string }) => {
-      const { error } = await supabase
-        .from("promise_subcategories")
-        .insert({ category_id: input.categoryId, slug: input.slug, label: input.label });
-      if (error) throw error;
-      await writeAuditLog({ action: "Sub Category Created", details: `${input.label} created` });
-      return { message: "Sub category created", description: input.label };
-    },
-  );
+  return useTrackerMutation(async (input: { categoryId: string; slug: string; label: string }) => {
+    const { error } = await supabase
+      .from("promise_subcategories")
+      .insert({ category_id: input.categoryId, slug: input.slug, label: input.label });
+    if (error) throw error;
+    await writeAuditLog({ action: "Sub Category Created", details: `${input.label} created` });
+    return { message: "Sub category created", description: input.label };
+  }, "save_subcategory");
 }
 
 /** Aggregated live metrics used across the tracker screens. */
@@ -523,8 +648,7 @@ export function useTrackerMetrics() {
     const now = Date.now();
     const byStatus = (status: string) => promises.filter((p) => p.status === status);
     const overdue = promises.filter(
-      (p) =>
-        !["fulfilled"].includes(p.status) && new Date(p.deadline).getTime() < now,
+      (p) => !["fulfilled"].includes(p.status) && new Date(p.deadline).getTime() < now,
     );
     const fulfilled = byStatus("fulfilled");
     const onTime = fulfilled.filter(
