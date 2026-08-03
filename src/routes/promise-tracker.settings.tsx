@@ -4,6 +4,7 @@ import { PTPageHeader } from "@/components/promise-tracker/PTPrimitives";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { SystemHealthPanel } from "@/components/promise-tracker/SystemHealth";
 import { useSaveSettings, useSettings } from "@/hooks/usePromiseTracker";
 
 export const Route = createFileRoute("/promise-tracker/settings")({
@@ -39,19 +40,52 @@ function PTSettings() {
   }
 
   const toggles = [
-    { key: "auto_escalation" as const, label: "Auto escalation", hint: "Raise the escalation level automatically when a deadline passes." },
-    { key: "fine_system_enabled" as const, label: "Fine system", hint: "Apply active fine rules automatically on breach." },
-    { key: "tip_system_enabled" as const, label: "Tip system", hint: "Release tip rules automatically on early delivery." },
-    { key: "lock_after_fulfill" as const, label: "Lock on fulfilment", hint: "Freeze records once a promise is fulfilled." },
-    { key: "auto_reminder" as const, label: "Auto reminders", hint: "Send reminders to the accountable owner before the deadline." },
-    { key: "require_approval" as const, label: "Require approval", hint: "New promises must be approved before they activate." },
-    { key: "working_hours_only" as const, label: "Working hours only", hint: "Only count working hours towards deadlines and escalation." },
+    {
+      key: "auto_escalation" as const,
+      label: "Auto escalation",
+      hint: "Raise the escalation level automatically when a deadline passes.",
+    },
+    {
+      key: "fine_system_enabled" as const,
+      label: "Fine system",
+      hint: "Apply active fine rules automatically on breach.",
+    },
+    {
+      key: "tip_system_enabled" as const,
+      label: "Tip system",
+      hint: "Release tip rules automatically on early delivery.",
+    },
+    {
+      key: "lock_after_fulfill" as const,
+      label: "Lock on fulfilment",
+      hint: "Freeze records once a promise is fulfilled.",
+    },
+    {
+      key: "auto_reminder" as const,
+      label: "Auto reminders",
+      hint: "Send reminders to the accountable owner before the deadline.",
+    },
+    {
+      key: "require_approval" as const,
+      label: "Require approval",
+      hint: "New promises must be approved before they activate.",
+    },
+    {
+      key: "working_hours_only" as const,
+      label: "Working hours only",
+      hint: "Only count working hours towards deadlines and escalation.",
+    },
   ];
 
   const numbers = [
     { key: "reminder_before_hours" as const, label: "Reminder window (hours before deadline)" },
     { key: "escalation_delay_hours" as const, label: "Escalate after (hours overdue)" },
     { key: "promise_expiry_days" as const, label: "Promise expiry (days)" },
+  ];
+
+  const times = [
+    { key: "work_start_time" as const, label: "Working day starts" },
+    { key: "work_end_time" as const, label: "Working day ends" },
   ];
 
   return (
@@ -129,4 +163,3 @@ function PTSettings() {
     </div>
   );
 }
-

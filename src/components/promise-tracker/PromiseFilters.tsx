@@ -91,7 +91,11 @@ export function applyPromiseFilters(
     if (filters.owner !== "all" && row.owner !== filters.owner) return false;
     if (filters.receiver !== "all" && row.receiver !== filters.receiver) return false;
     if (filters.escalation !== "all") {
-      if (filters.escalation === "none" ? row.escalation_level !== 0 : String(row.escalation_level) !== filters.escalation)
+      if (
+        filters.escalation === "none"
+          ? row.escalation_level !== 0
+          : String(row.escalation_level) !== filters.escalation
+      )
         return false;
     }
     if (filters.locked !== "all" && String(row.is_locked) !== filters.locked) return false;
@@ -151,7 +155,8 @@ export function PromiseFilterBar({
   const categories = useMemo(() => {
     const map = new Map<string, string>();
     promises.forEach((row) => {
-      if (row.promise_categories) map.set(row.promise_categories.slug, row.promise_categories.label);
+      if (row.promise_categories)
+        map.set(row.promise_categories.slug, row.promise_categories.label);
     });
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [promises]);

@@ -25,11 +25,7 @@ import {
   PriorityBadge,
   StatusBadge,
 } from "./PTPrimitives";
-import {
-  PromiseFilterBar,
-  applyPromiseFilters,
-  usePromiseFilters,
-} from "./PromiseFilters";
+import { PromiseFilterBar, applyPromiseFilters, usePromiseFilters } from "./PromiseFilters";
 import {
   downloadCsv,
   formatCurrency,
@@ -121,7 +117,6 @@ export function PromiseTable({
         />
       ) : null}
 
-
       {rows.length === 0 ? (
         <EmptyState title={emptyTitle} description={emptyDescription} />
       ) : (
@@ -147,9 +142,7 @@ export function PromiseTable({
                   <TableRow key={row.id}>
                     <TableCell className="mono text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
-                        {row.is_locked ? (
-                          <Lock className="size-3 text-muted-foreground" />
-                        ) : null}
+                        {row.is_locked ? <Lock className="size-3 text-muted-foreground" /> : null}
                         {row.code}
                       </div>
                     </TableCell>

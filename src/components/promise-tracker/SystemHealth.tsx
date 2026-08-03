@@ -76,7 +76,9 @@ export function SystemHealthPanel() {
           {events.map((event) => (
             <div key={event.id} className="flex flex-wrap items-start gap-3 p-4">
               <PTBadge
-                className={HEALTH_LEVEL_META[event.level]?.className ?? HEALTH_LEVEL_META['error']!.className}
+                className={
+                  HEALTH_LEVEL_META[event.level]?.className ?? HEALTH_LEVEL_META["error"]!.className
+                }
               >
                 {HEALTH_LEVEL_META[event.level]?.label ?? event.level}
               </PTBadge>
