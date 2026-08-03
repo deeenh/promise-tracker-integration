@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { MetricCard, PTPageHeader } from "@/components/promise-tracker/PTPrimitives";
+import { FineTipDialog } from "@/components/promise-tracker/FineTipDialog";
 import { PromiseTable } from "@/components/promise-tracker/PromiseTable";
 import { usePromises } from "@/hooks/usePromiseTracker";
 import { formatCurrency } from "@/lib/promise-tracker/constants";
@@ -57,6 +58,25 @@ function PTFulfilled() {
         emptyTitle="Nothing fulfilled yet"
         emptyDescription="Fulfilled promises will be archived here."
       />
+
+      {rows.length > 0 ? (
+        <div className="glass-panel mt-6 divide-y divide-border">
+          {rows.map((row) => (
+            <div key={row.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">{row.title}</p>
+                  <span className="mono text-xs text-muted-foreground">{row.code}</span>
+                </div>
+                <p className="mt-1 text-xs text-success">
+                  Tip released: {formatCurrency(Number(row.tip_amount))}
+                </p>
+              </div>
+              <FineTipDialog promise={row} kind="tip" />
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

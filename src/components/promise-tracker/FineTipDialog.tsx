@@ -78,11 +78,7 @@ export function FineTipDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" disabled={promise.is_locked}>
-          {kind === "fine" ? (
-            <BadgeIndianRupee className="size-4" />
-          ) : (
-            <Gift className="size-4" />
-          )}
+          {kind === "fine" ? <BadgeIndianRupee className="size-4" /> : <Gift className="size-4" />}
           {label}
         </Button>
       </DialogTrigger>

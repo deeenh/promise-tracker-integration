@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { MetricCard, PTPageHeader } from "@/components/promise-tracker/PTPrimitives";
+import { FineTipDialog } from "@/components/promise-tracker/FineTipDialog";
 import { PromiseTable } from "@/components/promise-tracker/PromiseTable";
 import { usePromises } from "@/hooks/usePromiseTracker";
 import { formatCurrency } from "@/lib/promise-tracker/constants";
@@ -66,6 +67,12 @@ function PTBroken() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Breach reason: {row.breach_reason ?? "Not recorded"}
               </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <span className="text-xs text-destructive">
+                  Fine applied: {formatCurrency(Number(row.fine_amount))}
+                </span>
+                <FineTipDialog promise={row} kind="fine" />
+              </div>
             </div>
           ))}
         </div>
