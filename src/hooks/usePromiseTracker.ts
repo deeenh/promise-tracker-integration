@@ -380,7 +380,6 @@ export function useUpdatePromiseStatus() {
       });
       return { message: "Status updated", description: `${input.promise.code} → ${input.status}` };
     },
-    "update_status",,
     "update_status",
   );
 }
@@ -464,7 +463,6 @@ export function useApplyFine() {
       });
       return { message: "Fine applied", description: `${input.promise.code} · ${input.rule}` };
     },
-    "apply_fine",,
     "apply_fine",
   );
 }
@@ -484,7 +482,6 @@ export function useReleaseTip() {
       });
       return { message: "Tip released", description: `${input.promise.code} · ${input.rule}` };
     },
-    "release_tip",,
     "release_tip",
   );
 }
@@ -578,7 +575,6 @@ export function useSaveRule() {
       });
       return { message: "Rule created", description: input.name };
     },
-    "save_rule",,
     "save_rule",
   );
 }
@@ -606,7 +602,6 @@ export function useSaveSettings() {
       });
       return { message: "Settings saved", description: "Promise tracker settings updated" };
     },
-    "save_settings",,
     "save_settings",
   );
 }
@@ -630,7 +625,6 @@ export function useSaveCategory() {
       await writeAuditLog({ action: "Category Created", details: `${input.label} created` });
       return { message: "Category created", description: input.label };
     },
-    "save_category",,
     "save_category",
   );
 }
