@@ -28,6 +28,8 @@ export const Route = createFileRoute("/promise-tracker/escalations")({
         property: "og:description",
         content: "Track and resolve the four-level escalation ladder for overdue commitments.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTEscalations,

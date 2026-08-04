@@ -18,6 +18,8 @@ export const Route = createFileRoute("/promise-tracker/all")({
         property: "og:description",
         content: "Search, filter and export the full Software Vala promise register.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTAllPromises,

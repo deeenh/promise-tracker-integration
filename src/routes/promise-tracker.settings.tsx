@@ -21,6 +21,8 @@ export const Route = createFileRoute("/promise-tracker/settings")({
         property: "og:description",
         content: "Configure reminders, escalation, fines and tips for the promise register.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTSettings,

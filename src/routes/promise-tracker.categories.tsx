@@ -42,6 +42,8 @@ export const Route = createFileRoute("/promise-tracker/categories")({
         property: "og:description",
         content: "Manage the category hierarchy behind Software Vala's promise register.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTCategories,

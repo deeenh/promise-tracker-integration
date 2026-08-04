@@ -38,6 +38,8 @@ export const Route = createFileRoute("/promise-tracker/create")({
         property: "og:description",
         content: "Register a new tracked commitment with full category hierarchy and deadline.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTCreatePromise,

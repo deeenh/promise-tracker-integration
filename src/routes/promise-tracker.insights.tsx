@@ -23,6 +23,8 @@ export const Route = createFileRoute("/promise-tracker/insights")({
         property: "og:description",
         content: "Delay-risk scores and recommended actions for open commitments.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTInsights,
