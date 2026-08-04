@@ -43,13 +43,16 @@ export async function reportHealth(report: HealthReport): Promise<void> {
   if (shouldSkip(key)) return;
 
   try {
-    await supabase.from("promise_health_events").insert({
+    const { error } = await supabase.from("promise_health_events").insert({
       source: report.source,
       level,
       event: report.event,
       message: report.message.slice(0, 2000),
       context: (report.context ?? {}) as never,
     });
+    if (error) {
+      console.error("[promise-tracker:monitoring] failed to persist health event", error);
+    }
   } catch (error) {
     console.error("[promise-tracker:monitoring] failed to persist health event", error);
   }
