@@ -51,9 +51,12 @@ export function FineTipDialog({
   );
   const rule = available.find((entry) => entry.id === ruleId);
   const isPercentage = rule?.rule_type === "percentage";
+  const isPerDay = rule?.rule_type === "per_day";
   const amount = rule
     ? isPercentage
       ? (Number(base || 0) * Number(rule.amount)) / 100
+      : isPerDay
+        ? Math.max(1, Number(promise.delay_days)) * Number(rule.amount)
       : Number(rule.amount)
     : 0;
 
@@ -124,6 +127,12 @@ export function FineTipDialog({
                 placeholder="Contract or milestone value"
               />
             </div>
+          ) : null}
+
+          {isPerDay ? (
+            <p className="text-xs text-muted-foreground">
+              {formatRuleAmount(rule)} × {Math.max(1, Number(promise.delay_days))} delayed day(s)
+            </p>
           ) : null}
 
           <p className="text-sm text-muted-foreground">

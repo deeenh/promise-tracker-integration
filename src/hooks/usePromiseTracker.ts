@@ -35,17 +35,28 @@ export const trackerKeys = {
   health: ["promise-tracker", "health"] as const,
 };
 
+function monitoredQuery<T>(event: string, query: () => Promise<T>) {
+  return async () => {
+    try {
+      return await query();
+    } catch (error) {
+      void reportHealth({ source: "query", event, message: errorMessage(error) });
+      throw error;
+    }
+  };
+}
+
 export function usePromises() {
   return useQuery({
     queryKey: trackerKeys.promises,
-    queryFn: async (): Promise<PromiseWithCategory[]> => {
+    queryFn: monitoredQuery("load_promises", async (): Promise<PromiseWithCategory[]> => {
       const { data, error } = await supabase
         .from("promises")
         .select(PROMISE_SELECT)
         .order("deadline", { ascending: true });
       if (error) throw error;
       return (data ?? []) as PromiseWithCategory[];
-    },
+    }),
     refetchInterval: 30000,
   });
 }
@@ -53,60 +64,62 @@ export function usePromises() {
 export function useCategories() {
   return useQuery({
     queryKey: trackerKeys.categories,
-    queryFn: async (): Promise<PromiseCategoryRow[]> => {
+    queryFn: monitoredQuery("load_categories", async (): Promise<PromiseCategoryRow[]> => {
       const { data, error } = await supabase
         .from("promise_categories")
         .select("*")
         .order("sort_order");
       if (error) throw error;
       return data ?? [];
-    },
+    }),
   });
 }
 
 export function useSubcategories() {
   return useQuery({
     queryKey: trackerKeys.subcategories,
-    queryFn: async (): Promise<PromiseSubcategoryRow[]> => {
+    queryFn: monitoredQuery("load_subcategories", async (): Promise<PromiseSubcategoryRow[]> => {
       const { data, error } = await supabase
         .from("promise_subcategories")
         .select("*")
         .order("sort_order");
       if (error) throw error;
       return data ?? [];
-    },
+    }),
   });
 }
 
 export function useRules() {
   return useQuery({
     queryKey: trackerKeys.rules,
-    queryFn: async (): Promise<PromiseRuleRow[]> => {
+    queryFn: monitoredQuery("load_rules", async (): Promise<PromiseRuleRow[]> => {
       const { data, error } = await supabase.from("promise_rules").select("*").order("code");
       if (error) throw error;
       return data ?? [];
-    },
+    }),
   });
 }
 
 export function useInsights() {
   return useQuery({
     queryKey: trackerKeys.insights,
-    queryFn: async (): Promise<(PromiseInsightRow & { promises: PromiseRow | null })[]> => {
+    queryFn: monitoredQuery("load_insights", async (): Promise<
+      (PromiseInsightRow & { promises: PromiseRow | null })[]
+    > => {
       const { data, error } = await supabase
         .from("promise_ai_insights")
         .select("*, promises(*)")
         .order("delay_risk", { ascending: false });
       if (error) throw error;
       return (data ?? []) as (PromiseInsightRow & { promises: PromiseRow | null })[];
-    },
+    }),
   });
 }
 
 export function useAuditLogs() {
   return useQuery({
     queryKey: trackerKeys.logs,
-    queryFn: async (): Promise<PromiseAuditLogRow[]> => {
+    queryFn: monitoredQuery("load_audit_logs", async (): Promise<PromiseAuditLogRow[]> => {
       const { data, error } = await supabase
         .from("promise_audit_logs")
         .select("*")
@@ -114,25 +127,25 @@ export function useAuditLogs() {
         .limit(200);
       if (error) throw error;
       return data ?? [];
-    },
+    }),
   });
 }
 
 export function useSettings() {
   return useQuery({
     queryKey: trackerKeys.settings,
-    queryFn: async (): Promise<PromiseSettingsRow | null> => {
+    queryFn: monitoredQuery("load_settings", async (): Promise<PromiseSettingsRow | null> => {
       const { data, error } = await supabase.from("promise_settings").select("*").maybeSingle();
       if (error) throw error;
       return data;
-    },
+    }),
   });
 }
 
 export function useHealthEvents(limit = 100) {
   return useQuery({
     queryKey: [...trackerKeys.health, limit],
-    queryFn: async (): Promise<PromiseHealthEventRow[]> => {
+    queryFn: monitoredQuery("load_health_events", async (): Promise<PromiseHealthEventRow[]> => {
       const { data, error } = await supabase
         .from("promise_health_events")
         .select("*")
@@ -140,7 +153,7 @@ export function useHealthEvents(limit = 100) {
         .limit(limit);
       if (error) throw error;
       return data ?? [];
-    },
+    }),
     refetchInterval: 60000,
   });
 }
