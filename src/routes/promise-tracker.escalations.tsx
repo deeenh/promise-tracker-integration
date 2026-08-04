@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { EscalationBadge, MetricCard, PTPageHeader } from "@/components/promise-tracker/PTPrimitives";
+import {
+  PromiseFilterBar,
+  applyPromiseFilters,
+  usePromiseFilters,
+} from "@/components/promise-tracker/PromiseFilters";
 import { Button } from "@/components/ui/button";
 import {
   useEscalatePromise,
@@ -30,9 +35,11 @@ export const Route = createFileRoute("/promise-tracker/escalations")({
 
 function PTEscalations() {
   const { data = [] } = usePromises();
+  const { filters, update, reset } = usePromiseFilters();
   const escalate = useEscalatePromise();
   const resolve = useResolveEscalation();
   const escalated = data.filter((row) => row.escalation_level > 0);
+  const filtered = applyPromiseFilters(escalated, filters);
 
   return (
     <div>
@@ -52,8 +59,18 @@ function PTEscalations() {
         ))}
       </div>
 
+      <div className="mb-4">
+        <PromiseFilterBar
+          promises={escalated}
+          filters={filters}
+          onChange={update}
+          onReset={reset}
+          resultCount={filtered.length}
+        />
+      </div>
+
       <div className="glass-panel divide-y divide-border">
-        {escalated.map((row) => (
+        {filtered.map((row) => (
           <div key={row.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
             <div className="min-w-64">
               <div className="flex items-center gap-2">
@@ -92,7 +109,7 @@ function PTEscalations() {
             </div>
           </div>
         ))}
-        {escalated.length === 0 ? (
+        {filtered.length === 0 ? (
           <p className="p-6 text-sm text-muted-foreground">No open escalations.</p>
         ) : null}
       </div>

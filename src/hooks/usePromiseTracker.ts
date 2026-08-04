@@ -41,6 +41,10 @@ function monitoredQuery<T>(event: string, query: () => Promise<T>) {
       return await query();
     } catch (error) {
       void reportHealth({ source: "query", event, message: errorMessage(error) });
+      toast.error("Promise Tracker data failed to load", {
+        id: `promise-tracker-query-${event}`,
+        description: errorMessage(error),
+      });
       throw error;
     }
   };
@@ -108,7 +112,7 @@ export function useInsights() {
     > => {
       const { data, error } = await supabase
         .from("promise_ai_insights")
-        .select("*, promises(*)")
+        .select("*, promises(*, promise_categories(id, slug, label, accent))")
         .order("delay_risk", { ascending: false });
       if (error) throw error;
       return (data ?? []) as (PromiseInsightRow & { promises: PromiseRow | null })[];
