@@ -108,14 +108,14 @@ export function useInsights() {
   return useQuery({
     queryKey: trackerKeys.insights,
     queryFn: monitoredQuery("load_insights", async (): Promise<
-      (PromiseInsightRow & { promises: PromiseRow | null })[]
+      (PromiseInsightRow & { promises: PromiseWithCategory | null })[]
     > => {
       const { data, error } = await supabase
         .from("promise_ai_insights")
         .select("*, promises(*, promise_categories(id, slug, label, accent))")
         .order("delay_risk", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as (PromiseInsightRow & { promises: PromiseRow | null })[];
+      return (data ?? []) as (PromiseInsightRow & { promises: PromiseWithCategory | null })[];
     }),
   });
 }
@@ -382,6 +382,7 @@ export function useCreatePromise() {
 export function useUpdatePromiseStatus() {
   return useTrackerMutation(
     async (input: { promise: PromiseRow; status: string; lock?: boolean }) => {
+      if (input.promise.is_locked) throw new Error("Unlock this promise before changing its status.");
       const patch: Partial<PromiseRow> = { status: input.status };
       if (input.status === "fulfilled") {
         patch.fulfilled_at = new Date().toISOString();
@@ -403,6 +404,7 @@ export function useUpdatePromiseStatus() {
 
 export function useExtendDeadline() {
   return useTrackerMutation(async (input: { promise: PromiseRow; hours: number }) => {
+    if (input.promise.is_locked) throw new Error("Unlock this promise before extending its deadline.");
     const newDeadline = new Date(
       new Date(input.promise.deadline).getTime() + input.hours * 3600000,
     ).toISOString();
@@ -426,6 +428,7 @@ export function useExtendDeadline() {
 
 export function useEscalatePromise() {
   return useTrackerMutation(async (input: { promise: PromiseRow; reason: string }) => {
+    if (input.promise.is_locked) throw new Error("Unlock this promise before escalating it.");
     const level = Math.min(4, input.promise.escalation_level + 1);
     const { error } = await supabase
       .from("promises")
@@ -525,6 +528,7 @@ export function useToggleLock() {
 
 export function useDeletePromise() {
   return useTrackerMutation(async (promiseRow: PromiseRow) => {
+    if (promiseRow.is_locked) throw new Error("Unlock this promise before deleting it.");
     const { error } = await supabase.from("promises").delete().eq("id", promiseRow.id);
     if (error) throw error;
     await writeAuditLog({
