@@ -20,6 +20,8 @@ export const Route = createFileRoute("/promise-tracker/broken")({
         property: "og:description",
         content: "Breach register with reasons, fines and escalation history.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTBroken,

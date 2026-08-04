@@ -18,6 +18,8 @@ export const Route = createFileRoute("/promise-tracker/delayed")({
         property: "og:description",
         content: "Recover slipping commitments with extensions and escalation controls.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTDelayed,

@@ -21,6 +21,8 @@ export const Route = createFileRoute("/promise-tracker/rules")({
         property: "og:description",
         content: "Configure automated penalties and rewards for tracked commitments.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTRules,

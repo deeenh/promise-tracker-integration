@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PTPageHeader, PTBadge } from "@/components/promise-tracker/PTPrimitives";
+import {
+  PromiseFilterBar,
+  applyPromiseFilters,
+  usePromiseFilters,
+} from "@/components/promise-tracker/PromiseFilters";
 import { useInsights } from "@/hooks/usePromiseTracker";
+import type { PromiseWithCategory } from "@/lib/promise-tracker/constants";
 
 export const Route = createFileRoute("/promise-tracker/insights")({
   head: () => ({
@@ -17,6 +23,8 @@ export const Route = createFileRoute("/promise-tracker/insights")({
         property: "og:description",
         content: "Delay-risk scores and recommended actions for open commitments.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTInsights,
@@ -30,6 +38,12 @@ function riskTone(score: number) {
 
 function PTInsights() {
   const { data = [] } = useInsights();
+  const { filters, update, reset } = usePromiseFilters();
+  const linkedPromises = data
+    .map((insight) => insight.promises)
+    .filter((promise): promise is PromiseWithCategory => promise !== null);
+  const visibleIds = new Set(applyPromiseFilters(linkedPromises, filters).map((promise) => promise.id));
+  const filtered = data.filter((insight) => insight.promises && visibleIds.has(insight.promises.id));
 
   return (
     <div>
@@ -38,8 +52,18 @@ function PTInsights() {
         description="Risk scoring across open commitments, with the recommended next action for each one."
       />
 
+      <div className="mb-4">
+        <PromiseFilterBar
+          promises={linkedPromises}
+          filters={filters}
+          onChange={update}
+          onReset={reset}
+          resultCount={filtered.length}
+        />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
-        {data.map((insight) => (
+        {filtered.map((insight) => (
           <div key={insight.id} className="glass-panel p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -64,8 +88,8 @@ function PTInsights() {
             </p>
           </div>
         ))}
-        {data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No insights generated yet.</p>
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No insights match the current filters.</p>
         ) : null}
       </div>
     </div>

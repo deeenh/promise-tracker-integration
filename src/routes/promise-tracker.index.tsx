@@ -29,6 +29,8 @@ export const Route = createFileRoute("/promise-tracker/")({
         property: "og:description",
         content: "Live overview of commitments, escalations and accountability across Software Vala.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTOverview,

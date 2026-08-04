@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Filter, Search, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -148,7 +148,7 @@ export function PromiseFilterBar({
   onChange: (patch: Partial<PromiseFilterState>) => void;
   onReset: () => void;
   resultCount: number;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
 

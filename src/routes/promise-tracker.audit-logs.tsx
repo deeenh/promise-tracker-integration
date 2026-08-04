@@ -29,6 +29,8 @@ export const Route = createFileRoute("/promise-tracker/audit-logs")({
         property: "og:description",
         content: "Immutable trail of every action taken in the promise register.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTAuditLogs,

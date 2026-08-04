@@ -40,11 +40,54 @@ test("filters, updates status, extends, escalates, locks and deletes", async ({ 
   await expect(row.getByText(/delayed/i).first()).toBeVisible();
 
   await openMenu();
+  await page.getByRole("menuitem", { name: "Mark broken" }).click();
+  await page.goto("/promise-tracker/broken");
+  await page.getByPlaceholder(/search/i).fill(unique);
+  const brokenRecord = page.locator("div").filter({ hasText: unique }).filter({ hasText: /Fine applied/ }).last();
+  await brokenRecord.getByRole("button", { name: "Apply fine" }).click();
+  const fineDialog = page.getByRole("dialog");
+  await fineDialog.getByRole("combobox").click();
+  await page.getByRole("option").first().click();
+  const fineBase = fineDialog.getByLabel("Base value for percentage");
+  if (await fineBase.isVisible()) await fineBase.fill("10000");
+  await fineDialog.getByRole("button", { name: "Apply fine" }).click();
+  await expect(page.getByText(/Fine applied:/).last()).not.toContainText("₹0");
+
+  await page.goto("/promise-tracker/all");
+  await page.getByPlaceholder(/search/i).fill(unique);
+  const updatedRow = page.getByRole("row").filter({ hasText: unique }).first();
+  const openUpdatedMenu = async () => {
+    await updatedRow.getByRole("button", { name: /actions/i }).click();
+  };
+  await openUpdatedMenu();
+  await page.getByRole("menuitem", { name: "Mark fulfilled" }).click();
+  await page.goto("/promise-tracker/fulfilled");
+  await page.getByPlaceholder(/search/i).fill(unique);
+  const fulfilledRecord = page.locator("div").filter({ hasText: unique }).filter({ hasText: /Tip released/ }).last();
+  await fulfilledRecord.getByRole("button", { name: "Release tip" }).click();
+  const tipDialog = page.getByRole("dialog");
+  await tipDialog.getByRole("combobox").click();
+  await page.getByRole("option").first().click();
+  const tipBase = tipDialog.getByLabel("Base value for percentage");
+  if (await tipBase.isVisible()) await tipBase.fill("10000");
+  await tipDialog.getByRole("button", { name: "Release tip" }).click();
+  await expect(page.getByText(/Tip released:/).last()).not.toContainText("₹0");
+
+  await page.goto("/promise-tracker/all");
+  await page.getByPlaceholder(/search/i).fill(unique);
+  const finalRow = page.getByRole("row").filter({ hasText: unique }).first();
+  const openFinalMenu = async () => {
+    await finalRow.getByRole("button", { name: /actions/i }).click();
+  };
+
+  await openFinalMenu();
+  await page.getByRole("menuitem", { name: /Unlock record/ }).click();
+  await openFinalMenu();
   await page.getByRole("menuitem", { name: /Lock record/ }).click();
-  await openMenu();
+  await openFinalMenu();
   await page.getByRole("menuitem", { name: /Unlock record/ }).click();
 
-  await openMenu();
+  await openFinalMenu();
   await page.getByRole("menuitem", { name: "Delete promise" }).click();
   await expect(page.getByRole("row").filter({ hasText: unique })).toHaveCount(0);
 });

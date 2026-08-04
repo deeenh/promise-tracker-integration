@@ -20,6 +20,8 @@ export const Route = createFileRoute("/promise-tracker/fulfilled")({
         property: "og:description",
         content: "Completed commitments with on-time performance and released tips.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PTFulfilled,
