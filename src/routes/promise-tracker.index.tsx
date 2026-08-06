@@ -27,7 +27,8 @@ export const Route = createFileRoute("/promise-tracker/")({
       { property: "og:title", content: "Promise Tracker Overview — Software Vala" },
       {
         property: "og:description",
-        content: "Live overview of commitments, escalations and accountability across Software Vala.",
+        content:
+          "Live overview of commitments, escalations and accountability across Software Vala.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -41,7 +42,9 @@ function PTOverview() {
   const { data: logs = [] } = useAuditLogs();
 
   const attention = promises
-    .filter((row) => row.status === "delayed" || row.status === "broken" || row.escalation_level > 0)
+    .filter(
+      (row) => row.status === "delayed" || row.status === "broken" || row.escalation_level > 0,
+    )
     .slice(0, 8);
 
   return (

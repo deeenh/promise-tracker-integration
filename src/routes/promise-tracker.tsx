@@ -8,7 +8,8 @@ export const Route = createFileRoute("/promise-tracker")({
       { title: "Promise Tracker — Software Vala" },
       {
         name: "description",
-        content: "Track Software Vala commitments with live deadlines, escalations, fines and tips.",
+        content:
+          "Track Software Vala commitments with live deadlines, escalations, fines and tips.",
       },
       { property: "og:title", content: "Promise Tracker — Software Vala" },
       {

@@ -13,11 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  useCategories,
-  useCreatePromise,
-  useSubcategories,
-} from "@/hooks/usePromiseTracker";
+import { useCategories, useCreatePromise, useSubcategories } from "@/hooks/usePromiseTracker";
 import {
   LINKED_MODULES,
   NANO_CATEGORIES,
@@ -70,7 +66,11 @@ function PTCreatePromise() {
 
   const availableSubs = subcategories.filter((sub) => sub.category_id === form.categoryId);
   const isValid =
-    form.title.trim() && form.categoryId && form.owner.trim() && form.receiver.trim() && form.deadline;
+    form.title.trim() &&
+    form.categoryId &&
+    form.owner.trim() &&
+    form.receiver.trim() &&
+    form.deadline;
 
   const submit = (status: "pending" | "active") => {
     if (!isValid) return;
@@ -83,7 +83,9 @@ function PTCreatePromise() {
       {
         onSuccess: () => {
           setForm(EMPTY);
-          navigate({ to: status === "active" ? "/promise-tracker/active" : "/promise-tracker/all" });
+          navigate({
+            to: status === "active" ? "/promise-tracker/active" : "/promise-tracker/all",
+          });
         },
       },
     );

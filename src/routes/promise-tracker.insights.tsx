@@ -42,8 +42,12 @@ function PTInsights() {
   const linkedPromises = data
     .map((insight) => insight.promises)
     .filter((promise): promise is PromiseWithCategory => promise !== null);
-  const visibleIds = new Set(applyPromiseFilters(linkedPromises, filters).map((promise) => promise.id));
-  const filtered = data.filter((insight) => insight.promises && visibleIds.has(insight.promises.id));
+  const visibleIds = new Set(
+    applyPromiseFilters(linkedPromises, filters).map((promise) => promise.id),
+  );
+  const filtered = data.filter(
+    (insight) => insight.promises && visibleIds.has(insight.promises.id),
+  );
 
   return (
     <div>

@@ -107,16 +107,17 @@ export function useRules() {
 export function useInsights() {
   return useQuery({
     queryKey: trackerKeys.insights,
-    queryFn: monitoredQuery("load_insights", async (): Promise<
-      (PromiseInsightRow & { promises: PromiseWithCategory | null })[]
-    > => {
-      const { data, error } = await supabase
-        .from("promise_ai_insights")
-        .select("*, promises(*, promise_categories(id, slug, label, accent))")
-        .order("delay_risk", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as (PromiseInsightRow & { promises: PromiseWithCategory | null })[];
-    }),
+    queryFn: monitoredQuery(
+      "load_insights",
+      async (): Promise<(PromiseInsightRow & { promises: PromiseWithCategory | null })[]> => {
+        const { data, error } = await supabase
+          .from("promise_ai_insights")
+          .select("*, promises(*, promise_categories(id, slug, label, accent))")
+          .order("delay_risk", { ascending: false });
+        if (error) throw error;
+        return (data ?? []) as (PromiseInsightRow & { promises: PromiseWithCategory | null })[];
+      },
+    ),
   });
 }
 
@@ -249,7 +250,7 @@ export function useTrackerRealtime() {
     };
 
     const channel = supabase
-      .channel(`promise-tracker-realtime-${manualRetry}-${attempt}`)
+      .channel(`promise-tracker-realtime-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "promises" }, () => {
         queryClient.invalidateQueries({ queryKey: trackerKeys.promises });
         queryClient.invalidateQueries({ queryKey: trackerKeys.insights });
@@ -382,7 +383,8 @@ export function useCreatePromise() {
 export function useUpdatePromiseStatus() {
   return useTrackerMutation(
     async (input: { promise: PromiseRow; status: string; lock?: boolean }) => {
-      if (input.promise.is_locked) throw new Error("Unlock this promise before changing its status.");
+      if (input.promise.is_locked)
+        throw new Error("Unlock this promise before changing its status.");
       const patch: Partial<PromiseRow> = { status: input.status };
       if (input.status === "fulfilled") {
         patch.fulfilled_at = new Date().toISOString();
@@ -404,7 +406,8 @@ export function useUpdatePromiseStatus() {
 
 export function useExtendDeadline() {
   return useTrackerMutation(async (input: { promise: PromiseRow; hours: number }) => {
-    if (input.promise.is_locked) throw new Error("Unlock this promise before extending its deadline.");
+    if (input.promise.is_locked)
+      throw new Error("Unlock this promise before extending its deadline.");
     const newDeadline = new Date(
       new Date(input.promise.deadline).getTime() + input.hours * 3600000,
     ).toISOString();

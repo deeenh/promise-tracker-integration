@@ -9,7 +9,10 @@ export const Route = createFileRoute("/")({
         content: "Open the Software Vala Promise Tracker command center.",
       },
       { property: "og:title", content: "Promise Tracker — Software Vala" },
-      { property: "og:description", content: "Open the Software Vala Promise Tracker command center." },
+      {
+        property: "og:description",
+        content: "Open the Software Vala Promise Tracker command center.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

@@ -1,17 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { EscalationBadge, MetricCard, PTPageHeader } from "@/components/promise-tracker/PTPrimitives";
+import {
+  EscalationBadge,
+  MetricCard,
+  PTPageHeader,
+} from "@/components/promise-tracker/PTPrimitives";
 import {
   PromiseFilterBar,
   applyPromiseFilters,
   usePromiseFilters,
 } from "@/components/promise-tracker/PromiseFilters";
 import { Button } from "@/components/ui/button";
-import {
-  useEscalatePromise,
-  usePromises,
-  useResolveEscalation,
-} from "@/hooks/usePromiseTracker";
+import { useEscalatePromise, usePromises, useResolveEscalation } from "@/hooks/usePromiseTracker";
 import { ESCALATION_LEVELS, formatDateTime } from "@/lib/promise-tracker/constants";
 
 export const Route = createFileRoute("/promise-tracker/escalations")({
@@ -80,8 +80,7 @@ function PTEscalations() {
                 <span className="mono text-xs text-muted-foreground">{row.code}</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {row.escalation_reason ?? "No reason recorded"} ·{" "}
-                {formatDateTime(row.escalated_at)}
+                {row.escalation_reason ?? "No reason recorded"} · {formatDateTime(row.escalated_at)}
               </p>
               <p className="text-xs text-muted-foreground">
                 Owner {row.owner} · Receiver {row.receiver}
