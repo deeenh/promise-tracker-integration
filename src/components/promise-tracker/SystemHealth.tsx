@@ -1,7 +1,7 @@
 import { AlertTriangle, Activity, ShieldCheck } from "lucide-react";
 
 import { MetricCard, PTBadge, EmptyState, LoadingRows } from "./PTPrimitives";
-import { useHealthEvents, useTrackerRealtime } from "@/hooks/usePromiseTracker";
+import { useHealthEvents } from "@/hooks/usePromiseTracker";
 import { HEALTH_LEVEL_META } from "@/lib/promise-tracker/monitoring";
 import { formatDateTime } from "@/lib/promise-tracker/constants";
 
@@ -18,7 +18,6 @@ const SOURCE_LABEL: Record<string, string> = {
  */
 export function SystemHealthPanel() {
   const { data: events = [], isLoading } = useHealthEvents(50);
-  const { status, lastError } = useTrackerRealtime();
 
   const last24h = events.filter(
     (event) => Date.now() - new Date(event.created_at).getTime() < 86400000,
@@ -40,9 +39,9 @@ export function SystemHealthPanel() {
       <div className="mb-4 grid gap-4 sm:grid-cols-4">
         <MetricCard
           label="Realtime"
-          value={status === "live" ? "Live" : status === "connecting" ? "Connecting" : "Degraded"}
-          tone={status === "live" ? "success" : status === "offline" ? "danger" : "warning"}
-          hint={lastError ?? "Subscription healthy"}
+          value={realtimeIssues.length > 0 ? "Degraded" : "Healthy"}
+          tone={realtimeIssues.length > 0 ? "warning" : "success"}
+          hint="Based on incidents recorded in the last 24 hours"
           icon={<Activity className="size-4" />}
         />
         <MetricCard
