@@ -79,7 +79,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Promise Tracker — Software Vala" },
-      { name: "description", content: "Track every commitment across Software Vala with live deadlines, escalations, fines and tips." },
+      {
+        name: "description",
+        content:
+          "Track every commitment across Software Vala with live deadlines, escalations, fines and tips.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Promise Tracker — Software Vala" },
       { property: "og:description", content: "Live commitment tracking for Software Vala." },

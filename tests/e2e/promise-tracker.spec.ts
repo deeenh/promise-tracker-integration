@@ -9,15 +9,23 @@ const unique = `E2E ${Date.now()}`;
 test.describe.configure({ mode: "serial" });
 
 test("creates a promise", async ({ page }) => {
+  const categoriesLoaded = page.waitForResponse(
+    (response) =>
+      response.url().includes("/rest/v1/promise_categories") && response.status() === 200,
+  );
   await page.goto("/promise-tracker/create");
+  await categoriesLoaded;
   await page.getByLabel("Promise title").fill(unique);
   await page.getByRole("combobox").first().click();
-  await page.getByRole("option").first().click();
-  await page.getByLabel("Owner").fill("E2E Owner");
-  await page.getByLabel("Receiver").fill("E2E Receiver");
+  await page.getByRole("listbox").getByRole("option").first().click();
+  await page.getByLabel("Promise owner").fill("E2E Owner");
+  await page.getByLabel("Promise receiver").fill("E2E Receiver");
   const deadline = new Date(Date.now() + 86400000).toISOString().slice(0, 16);
   await page.locator('input[type="datetime-local"]').fill(deadline);
-  await page.getByRole("button", { name: /create|activate|save/i }).first().click();
+  await page
+    .getByRole("button", { name: /create|activate|save/i })
+    .first()
+    .click();
   await expect(page.getByText(unique).first()).toBeVisible();
 });
 
@@ -43,7 +51,9 @@ test("filters, updates status, extends, escalates, locks and deletes", async ({ 
   await page.getByRole("menuitem", { name: "Mark broken" }).click();
   await page.goto("/promise-tracker/broken");
   await page.getByPlaceholder(/search/i).fill(unique);
-  const brokenRecord = page.locator("div").filter({ hasText: unique }).filter({ hasText: /Fine applied/ }).last();
+  const brokenRecord = page
+    .locator(".glass-panel.mt-6 > div")
+    .filter({ has: page.getByText(unique, { exact: true }) });
   await brokenRecord.getByRole("button", { name: "Apply fine" }).click();
   const fineDialog = page.getByRole("dialog");
   await fineDialog.getByRole("combobox").click();
@@ -63,7 +73,9 @@ test("filters, updates status, extends, escalates, locks and deletes", async ({ 
   await page.getByRole("menuitem", { name: "Mark fulfilled" }).click();
   await page.goto("/promise-tracker/fulfilled");
   await page.getByPlaceholder(/search/i).fill(unique);
-  const fulfilledRecord = page.locator("div").filter({ hasText: unique }).filter({ hasText: /Tip released/ }).last();
+  const fulfilledRecord = page
+    .locator(".glass-panel.mt-6 > div")
+    .filter({ has: page.getByText(unique, { exact: true }) });
   await fulfilledRecord.getByRole("button", { name: "Release tip" }).click();
   const tipDialog = page.getByRole("dialog");
   await tipDialog.getByRole("combobox").click();
@@ -94,7 +106,9 @@ test("filters, updates status, extends, escalates, locks and deletes", async ({ 
 
 test("writes the lifecycle to the audit log", async ({ page }) => {
   await page.goto("/promise-tracker/audit-logs");
-  await expect(page.getByText(/Promise Created|Deadline Extended|Promise Deleted/).first()).toBeVisible();
+  await expect(
+    page.getByText(/Promise Created|Deadline Extended|Promise Deleted/).first(),
+  ).toBeVisible();
 });
 
 test("realtime indicator reports a connection state", async ({ page }) => {

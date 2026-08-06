@@ -62,7 +62,11 @@ function PTCategories() {
   const [subForm, setSubForm] = useState({ categoryId: "", label: "" });
 
   const slugify = (value: string) =>
-    value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
 
   return (
     <div>

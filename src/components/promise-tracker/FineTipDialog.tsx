@@ -57,7 +57,7 @@ export function FineTipDialog({
       ? (Number(base || 0) * Number(rule.amount)) / 100
       : isPerDay
         ? Math.max(1, Number(promise.delay_days)) * Number(rule.amount)
-      : Number(rule.amount)
+        : Number(rule.amount)
     : 0;
 
   const mutation = kind === "fine" ? applyFine : releaseTip;
