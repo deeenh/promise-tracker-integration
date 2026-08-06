@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -206,6 +206,7 @@ const RECONNECT_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
  */
 export function useTrackerRealtime() {
   const queryClient = useQueryClient();
+  const channelId = useId().replaceAll(":", "");
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [status, setStatus] = useState<RealtimeStatus>("connecting");
   const [lastError, setLastError] = useState<string | null>(null);
@@ -250,7 +251,7 @@ export function useTrackerRealtime() {
     };
 
     const channel = supabase
-      .channel(`promise-tracker-realtime-${manualRetry}-${attempt}`)
+      .channel(`promise-tracker-realtime-${channelId}-${manualRetry}-${attempt}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "promises" }, () => {
         queryClient.invalidateQueries({ queryKey: trackerKeys.promises });
         queryClient.invalidateQueries({ queryKey: trackerKeys.insights });
@@ -291,7 +292,7 @@ export function useTrackerRealtime() {
       if (reconnectTimer) clearTimeout(reconnectTimer);
       supabase.removeChannel(channel);
     };
-  }, [queryClient, attempt, manualRetry]);
+  }, [queryClient, channelId, attempt, manualRetry]);
 
   return { lastUpdate, status, lastError, retryNow, attempt };
 }
