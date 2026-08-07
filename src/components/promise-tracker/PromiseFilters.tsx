@@ -152,6 +152,20 @@ export function PromiseFilterBar({
   actions?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const panelId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const wasExpanded = useRef(false);
+
+  // Focus management: move focus into the panel on open, restore it on close.
+  useEffect(() => {
+    if (expanded) {
+      panelRef.current?.querySelector<HTMLElement>("button, [tabindex]:not([tabindex='-1'])")?.focus();
+    } else if (wasExpanded.current) {
+      toggleRef.current?.focus();
+    }
+    wasExpanded.current = expanded;
+  }, [expanded]);
 
   const categories = useMemo(() => {
     const map = new Map<string, string>();
@@ -230,6 +244,9 @@ export function PromiseFilterBar({
 
         <Button
           variant={expanded ? "secondary" : "outline"}
+          ref={toggleRef}
+          aria-expanded={expanded}
+          aria-controls={panelId}
           onClick={() => setExpanded((value) => !value)}
         >
           <Filter className="size-4" />
@@ -240,7 +257,13 @@ export function PromiseFilterBar({
       </div>
 
       {expanded ? (
-        <div className="glass-panel grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          id={panelId}
+          ref={panelRef}
+          role="group"
+          aria-label="Additional promise filters"
+          className="glass-panel grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4"
+        >
           <Select value={filters.owner} onValueChange={(value) => onChange({ owner: value })}>
             <SelectTrigger aria-label="Filter by owner">
               <SelectValue placeholder="Owner" />
