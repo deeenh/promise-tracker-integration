@@ -146,8 +146,12 @@ export function toCsv(rows: Record<string, unknown>[], columns?: string[]) {
   ].join("\n");
 }
 
-export function downloadCsv(filename: string, rows: Record<string, unknown>[]) {
-  const csv = toCsv(rows);
+export function downloadCsv(
+  filename: string,
+  rows: Record<string, unknown>[],
+  columns?: string[],
+) {
+  const csv = toCsv(rows, columns);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
