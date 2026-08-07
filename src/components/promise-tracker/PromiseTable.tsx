@@ -27,6 +27,7 @@ import {
 } from "./PTPrimitives";
 import { PromiseFilterBar, applyPromiseFilters, usePromiseFilters } from "./PromiseFilters";
 import {
+  PROMISE_EXPORT_COLUMNS,
   downloadCsv,
   formatCurrency,
   formatDateTime,
@@ -90,6 +91,7 @@ export function PromiseTable({
         fine_amount: row.fine_amount,
         tip_amount: row.tip_amount,
       })),
+      PROMISE_EXPORT_COLUMNS,
     );
     logAction.mutate({
       action: "Data Exported",

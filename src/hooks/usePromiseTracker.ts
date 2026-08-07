@@ -140,7 +140,11 @@ export function useSettings() {
   return useQuery({
     queryKey: trackerKeys.settings,
     queryFn: monitoredQuery("load_settings", async (): Promise<PromiseSettingsRow | null> => {
-      const { data, error } = await supabase.from("promise_settings").select("*").maybeSingle();
+      const { data, error } = await supabase
+        .from("promise_settings")
+        .select("*")
+        .eq("singleton", true)
+        .maybeSingle();
       if (error) throw error;
       return data;
     }),
@@ -359,16 +363,16 @@ export function useCreatePromise() {
       .from("promises")
       .insert({
         code,
-      title: input.title,
-      description: input.description || null,
-      category_id: input.categoryId,
-      sub_category: input.subCategory || null,
-      nano_category: input.nanoCategory || null,
-      owner: input.owner,
-      receiver: input.receiver,
-      deadline: input.deadline,
-      priority: input.priority,
-      status: input.status,
+        title: input.title,
+        description: input.description || null,
+        category_id: input.categoryId,
+        sub_category: input.subCategory || null,
+        nano_category: input.nanoCategory || null,
+        owner: input.owner,
+        receiver: input.receiver,
+        deadline: input.deadline,
+        priority: input.priority,
+        status: input.status,
         linked_module: input.linkedModule || null,
       })
       .select("id")
@@ -403,7 +407,7 @@ export function useUpdatePromiseStatus() {
       await writeAuditLog({
         action: "Status Changed",
         promiseCode: input.promise.code,
-      promiseId: input.promise.id,
+        promiseId: input.promise.id,
         details: `Status changed from ${input.promise.status} to ${input.status}`,
       });
       return { message: "Status updated", description: `${input.promise.code} → ${input.status}` };
@@ -493,7 +497,7 @@ export function useApplyFine() {
       await writeAuditLog({
         action: "Fine Applied",
         promiseCode: input.promise.code,
-      promiseId: input.promise.id,
+        promiseId: input.promise.id,
         details: `Fine of ${input.amount} applied via ${input.rule}`,
       });
       return { message: "Fine applied", description: `${input.promise.code} · ${input.rule}` };
@@ -513,7 +517,7 @@ export function useReleaseTip() {
       await writeAuditLog({
         action: "Tip Released",
         promiseCode: input.promise.code,
-      promiseId: input.promise.id,
+        promiseId: input.promise.id,
         details: `Tip of ${input.amount} released via ${input.rule}`,
       });
       return { message: "Tip released", description: `${input.promise.code} · ${input.rule}` };

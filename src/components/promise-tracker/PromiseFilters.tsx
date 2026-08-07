@@ -160,7 +160,9 @@ export function PromiseFilterBar({
   // Focus management: move focus into the panel on open, restore it on close.
   useEffect(() => {
     if (expanded) {
-      panelRef.current?.querySelector<HTMLElement>("button, [tabindex]:not([tabindex='-1'])")?.focus();
+      panelRef.current
+        ?.querySelector<HTMLElement>("button, [tabindex]:not([tabindex='-1'])")
+        ?.focus();
     } else if (wasExpanded.current) {
       toggleRef.current?.focus();
     }
