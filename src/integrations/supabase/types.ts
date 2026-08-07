@@ -61,6 +61,7 @@ export type Database = {
           details: string | null
           id: string
           promise_code: string | null
+          promise_id: string | null
         }
         Insert: {
           action: string
@@ -70,6 +71,7 @@ export type Database = {
           details?: string | null
           id?: string
           promise_code?: string | null
+          promise_id?: string | null
         }
         Update: {
           action?: string
@@ -79,8 +81,17 @@ export type Database = {
           details?: string | null
           id?: string
           promise_code?: string | null
+          promise_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "promise_audit_logs_promise_id_fkey"
+            columns: ["promise_id"]
+            isOneToOne: false
+            referencedRelation: "promises"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       promise_categories: {
         Row: {
