@@ -135,9 +135,10 @@ export function remainingTime(deadline: string, now: Date) {
   };
 }
 
-export function toCsv(rows: Record<string, unknown>[]) {
-  if (rows.length === 0) return "";
-  const headers = Object.keys(rows[0]!);
+export function toCsv(rows: Record<string, unknown>[], columns?: string[]) {
+  // Deterministic header set: explicit columns, else the union of all row keys.
+  const headers = columns ?? [...new Set(rows.flatMap((row) => Object.keys(row)))];
+  if (headers.length === 0) return "";
   const escape = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   return [
     headers.join(","),
