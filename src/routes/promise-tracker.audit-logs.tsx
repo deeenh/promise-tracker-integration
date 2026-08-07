@@ -13,7 +13,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuditLogs, useLogAction } from "@/hooks/usePromiseTracker";
-import { downloadCsv, formatDateTime } from "@/lib/promise-tracker/constants";
+import {
+  AUDIT_LOG_EXPORT_COLUMNS,
+  downloadCsv,
+  formatDateTime,
+} from "@/lib/promise-tracker/constants";
 
 export const Route = createFileRoute("/promise-tracker/audit-logs")({
   head: () => ({
@@ -68,6 +72,7 @@ function PTAuditLogs() {
                   actor_role: log.actor_role,
                   details: log.details,
                 })),
+                AUDIT_LOG_EXPORT_COLUMNS,
               );
               logAction.mutate({
                 action: "Data Exported",

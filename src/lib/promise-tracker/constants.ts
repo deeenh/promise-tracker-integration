@@ -83,6 +83,30 @@ export const LINKED_MODULES = [
   "Incidents",
 ];
 
+export const PROMISE_EXPORT_COLUMNS = [
+  "code",
+  "title",
+  "category",
+  "sub_category",
+  "owner",
+  "receiver",
+  "status",
+  "priority",
+  "deadline",
+  "escalation_level",
+  "fine_amount",
+  "tip_amount",
+];
+
+export const AUDIT_LOG_EXPORT_COLUMNS = [
+  "timestamp",
+  "action",
+  "promise_code",
+  "actor",
+  "actor_role",
+  "details",
+];
+
 export function formatCurrency(value: number | string | null | undefined) {
   const amount = Number(value ?? 0);
   return new Intl.NumberFormat("en-IN", {
@@ -135,9 +159,10 @@ export function remainingTime(deadline: string, now: Date) {
   };
 }
 
-export function toCsv(rows: Record<string, unknown>[]) {
-  if (rows.length === 0) return "";
-  const headers = Object.keys(rows[0]!);
+export function toCsv(rows: Record<string, unknown>[], columns?: string[]) {
+  // Deterministic header set: explicit columns, else the union of all row keys.
+  const headers = columns ?? [...new Set(rows.flatMap((row) => Object.keys(row)))];
+  if (headers.length === 0) return "";
   const escape = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
   return [
     headers.join(","),
@@ -145,8 +170,8 @@ export function toCsv(rows: Record<string, unknown>[]) {
   ].join("\n");
 }
 
-export function downloadCsv(filename: string, rows: Record<string, unknown>[]) {
-  const csv = toCsv(rows);
+export function downloadCsv(filename: string, rows: Record<string, unknown>[], columns?: string[]) {
+  const csv = toCsv(rows, columns);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

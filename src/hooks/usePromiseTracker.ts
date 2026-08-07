@@ -140,7 +140,11 @@ export function useSettings() {
   return useQuery({
     queryKey: trackerKeys.settings,
     queryFn: monitoredQuery("load_settings", async (): Promise<PromiseSettingsRow | null> => {
-      const { data, error } = await supabase.from("promise_settings").select("*").maybeSingle();
+      const { data, error } = await supabase
+        .from("promise_settings")
+        .select("*")
+        .eq("singleton", true)
+        .maybeSingle();
       if (error) throw error;
       return data;
     }),
@@ -166,11 +170,13 @@ export function useHealthEvents(limit = 100) {
 export async function writeAuditLog(entry: {
   action: string;
   promiseCode?: string | null;
+  promiseId?: string | null;
   details: string;
 }) {
   const { error } = await supabase.from("promise_audit_logs").insert({
     action: entry.action,
     promise_code: entry.promiseCode ?? null,
+    promise_id: entry.promiseId ?? null,
     actor: TRACKER_ACTOR,
     actor_role: TRACKER_ACTOR_ROLE,
     details: entry.details,
@@ -353,24 +359,29 @@ export type CreatePromiseInput = {
 export function useCreatePromise() {
   return useTrackerMutation(async (input: CreatePromiseInput) => {
     const code = await nextPromiseCode();
-    const { error } = await supabase.from("promises").insert({
-      code,
-      title: input.title,
-      description: input.description || null,
-      category_id: input.categoryId,
-      sub_category: input.subCategory || null,
-      nano_category: input.nanoCategory || null,
-      owner: input.owner,
-      receiver: input.receiver,
-      deadline: input.deadline,
-      priority: input.priority,
-      status: input.status,
-      linked_module: input.linkedModule || null,
-    });
+    const { data: created, error } = await supabase
+      .from("promises")
+      .insert({
+        code,
+        title: input.title,
+        description: input.description || null,
+        category_id: input.categoryId,
+        sub_category: input.subCategory || null,
+        nano_category: input.nanoCategory || null,
+        owner: input.owner,
+        receiver: input.receiver,
+        deadline: input.deadline,
+        priority: input.priority,
+        status: input.status,
+        linked_module: input.linkedModule || null,
+      })
+      .select("id")
+      .single();
     if (error) throw error;
     await writeAuditLog({
       action: input.status === "active" ? "Promise Activated" : "Promise Created",
       promiseCode: code,
+      promiseId: created?.id ?? null,
       details: `${input.title} — owner ${input.owner}, receiver ${input.receiver}`,
     });
     return {
@@ -396,6 +407,7 @@ export function useUpdatePromiseStatus() {
       await writeAuditLog({
         action: "Status Changed",
         promiseCode: input.promise.code,
+        promiseId: input.promise.id,
         details: `Status changed from ${input.promise.status} to ${input.status}`,
       });
       return { message: "Status updated", description: `${input.promise.code} → ${input.status}` };
@@ -423,6 +435,7 @@ export function useExtendDeadline() {
     await writeAuditLog({
       action: "Deadline Extended",
       promiseCode: input.promise.code,
+      promiseId: input.promise.id,
       details: `Deadline extended by ${input.hours} hours`,
     });
     return { message: "Deadline extended", description: `${input.promise.code} +${input.hours}h` };
@@ -446,6 +459,7 @@ export function useEscalatePromise() {
     await writeAuditLog({
       action: "Escalated",
       promiseCode: input.promise.code,
+      promiseId: input.promise.id,
       details: `Escalated to Level ${level} — ${input.reason}`,
     });
     return { message: `Escalated to Level ${level}`, description: input.promise.code };
@@ -462,6 +476,7 @@ export function useResolveEscalation() {
     await writeAuditLog({
       action: "Escalation Updated",
       promiseCode: input.promise.code,
+      promiseId: input.promise.id,
       details: `Escalation marked ${input.status}`,
     });
     return {
@@ -482,6 +497,7 @@ export function useApplyFine() {
       await writeAuditLog({
         action: "Fine Applied",
         promiseCode: input.promise.code,
+        promiseId: input.promise.id,
         details: `Fine of ${input.amount} applied via ${input.rule}`,
       });
       return { message: "Fine applied", description: `${input.promise.code} · ${input.rule}` };
@@ -501,6 +517,7 @@ export function useReleaseTip() {
       await writeAuditLog({
         action: "Tip Released",
         promiseCode: input.promise.code,
+        promiseId: input.promise.id,
         details: `Tip of ${input.amount} released via ${input.rule}`,
       });
       return { message: "Tip released", description: `${input.promise.code} · ${input.rule}` };
@@ -520,6 +537,7 @@ export function useToggleLock() {
     await writeAuditLog({
       action: locked ? "Promise Locked" : "Promise Unlocked",
       promiseCode: promiseRow.code,
+      promiseId: promiseRow.id,
       details: locked ? "Record locked from further edits" : "Record unlocked for edits",
     });
     return {
@@ -537,6 +555,7 @@ export function useDeletePromise() {
     await writeAuditLog({
       action: "Promise Deleted",
       promiseCode: promiseRow.code,
+      promiseId: promiseRow.id,
       details: `${promiseRow.title} removed from the registry`,
     });
     return { message: "Promise deleted", description: promiseRow.code };
