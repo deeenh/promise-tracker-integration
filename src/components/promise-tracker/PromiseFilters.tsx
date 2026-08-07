@@ -105,7 +105,8 @@ export function applyPromiseFilters(
         if (diffMs >= 0 || row.status === "fulfilled") return false;
       } else {
         const hours = SLA_HOURS[filters.sla];
-        if (hours === undefined) return true;
+        // Unknown SLA key: never let the row bypass the filter.
+        if (hours === undefined) return false;
         if (diffMs < 0 || diffMs > hours * 3600000) return false;
       }
     }
