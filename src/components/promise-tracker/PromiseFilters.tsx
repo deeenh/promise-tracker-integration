@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Filter, Search, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
