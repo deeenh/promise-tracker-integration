@@ -173,11 +173,15 @@ export async function writeAuditLog(entry: {
   promiseId?: string | null;
   details: string;
 }) {
+  const { data: auth } = await supabase.auth.getUser();
   const { error } = await supabase.from("promise_audit_logs").insert({
     action: entry.action,
     promise_code: entry.promiseCode ?? null,
     promise_id: entry.promiseId ?? null,
-    actor: TRACKER_ACTOR,
+    // Canonical, stable actor identity + human-readable snapshot.
+    actor_key: auth?.user?.email?.toLowerCase() ?? TRACKER_ACTOR.toLowerCase(),
+    actor_user_id: auth?.user?.id ?? null,
+    actor: auth?.user?.email ?? TRACKER_ACTOR,
     actor_role: TRACKER_ACTOR_ROLE,
     details: entry.details,
   });
