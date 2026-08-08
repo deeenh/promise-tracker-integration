@@ -56,7 +56,9 @@ export type Database = {
         Row: {
           action: string
           actor: string
+          actor_key: string | null
           actor_role: string
+          actor_user_id: string | null
           created_at: string
           details: string | null
           id: string
@@ -66,7 +68,9 @@ export type Database = {
         Insert: {
           action: string
           actor: string
+          actor_key?: string | null
           actor_role: string
+          actor_user_id?: string | null
           created_at?: string
           details?: string | null
           id?: string
@@ -76,7 +80,9 @@ export type Database = {
         Update: {
           action?: string
           actor?: string
+          actor_key?: string | null
           actor_role?: string
+          actor_user_id?: string | null
           created_at?: string
           details?: string | null
           id?: string
