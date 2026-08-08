@@ -16,6 +16,11 @@ export default defineConfig({
     baseURL: process.env["E2E_BASE_URL"] ?? "http://localhost:8080",
     trace: "retain-on-failure",
     viewport: { width: 1440, height: 1000 },
+    // Allows running against a pre-installed browser binary in sandboxes where
+    // the Playwright-managed download is unavailable.
+    launchOptions: process.env["E2E_CHROME_PATH"]
+      ? { executablePath: process.env["E2E_CHROME_PATH"] }
+      : {},
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });
